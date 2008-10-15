@@ -1,0 +1,6 @@
+name="bjack"
+version="@VERSION@"
+description="OCaml blocking API for jack"
+requires=""
+archive(byte)="bjack.cma"
+archive(native)="bjack.cmxa"

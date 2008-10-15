@@ -1,0 +1,7 @@
+0.1.1 (23/06/2008)
+=====
+* Fix typo in caml_bjack_open_byte(s)
+
+0.1.0 (10/05/2008)
+=====
+* Initial release

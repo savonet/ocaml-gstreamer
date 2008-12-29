@@ -735,7 +735,7 @@ void
 JACK_shutdown(void *arg)
 {
   jack_driver_t *drv = (jack_driver_t *) arg;
-  int n = strlen(drv->client_name);
+  int n = strlen(drv->client_name)+1;
   char *client_name = malloc(n);
   if (client_name == NULL)
   {
@@ -743,7 +743,7 @@ JACK_shutdown(void *arg)
     return ;
   }
   strcpy(client_name,drv->client_name);
-  n = strlen(drv->server_name);
+  n = strlen(drv->server_name)+1;
   char *server_name = malloc(n);
   if (server_name == NULL)
   {
@@ -1075,7 +1075,7 @@ JACK_Open(jack_driver_t *drv, unsigned int bits_per_channel,
   drv->bits_per_channel = bits_per_channel;
   drv->num_input_channels = input_channels;
   drv->num_output_channels = output_channels;
-  n = strlen(client_name);
+  n = strlen(client_name)+1;
   if (n > jack_client_name_size()) 
   {
     ERR("client_name length (%d) is greater than maximal possible length: %d\n", n,
@@ -1089,7 +1089,7 @@ JACK_Open(jack_driver_t *drv, unsigned int bits_per_channel,
     return ERR_OPENING_JACK;
   }
   strcpy(drv->client_name,client_name);
-  n = strlen(server_name);
+  n = strlen(server_name)+1;
   drv->server_name = malloc(n);
   if (drv->server_name == NULL)
   {

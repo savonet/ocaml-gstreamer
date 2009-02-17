@@ -1,6 +1,6 @@
 
 # check for one particular file of the sources 
-AC_INIT(ocaml-bjack, 0.1.1, savonet-users@lists.sourceforge.net)
+AC_INIT(ocaml-bjack, 0.1.2, savonet-users@lists.sourceforge.net)
 
 VERSION=$PACKAGE_VERSION
 AC_MSG_RESULT([configuring $PACKAGE_STRING])

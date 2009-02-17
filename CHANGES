@@ -1,4 +1,4 @@
-0.1.2 ()
+0.1.2 (17-02-2009)
 =====
 * Fix invalid strlen call leading to segfaults (#219).
   Thanks to MiiJaySung for reporting, testing and fixing this !

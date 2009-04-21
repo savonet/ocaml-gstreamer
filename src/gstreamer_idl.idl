@@ -1,0 +1,58 @@
+// glib types
+
+typedef unsigned int guint;
+typedef char gchar;
+typedef boolean gboolean;
+
+// General functions
+
+void gst_init(int argc, [string*, null_terminated, unique]char **argv);
+void gst_version ([out]guint *major, [out]guint *minor, [out]guint *micro, [out]guint *nano);
+[string] gchar *gst_version_string ();
+
+// General types
+// Note : use GstElement instead of GstElement*, etc.
+
+quote(C,"void check_null_pointer(void *p) { if (p == NULL) caml_raise_constant(*caml_named_value(\"gst_exn_null_pointer\"));  }");
+
+typedef [abstract,ptr,finalize(gst_object_unref),errorcheck(check_null_pointer)] void *GstElement;
+typedef [abstract,ptr,finalize(gst_object_unref),errorcheck(check_null_pointer)] void *GstBin;
+
+// Element
+
+quote(C,"void set_element_property (GstElement e, char *n, char *v) { g_object_set (e, n, v, NULL); }")
+void set_element_property (GstElement e, [string]char *n, [string]char *v);
+
+gboolean gst_element_link (GstElement src, GstElement dest);
+
+typedef enum {
+  State_void_pending        = 0,
+  State_null                = 1,
+  State_ready               = 2,
+  State_paused              = 3,
+  State_playing             = 4
+} GstState;
+
+typedef enum {
+  GST_STATE_CHANGE_FAILURE             = 0,
+  GST_STATE_CHANGE_SUCCESS             = 1,
+  GST_STATE_CHANGE_ASYNC               = 2,
+  GST_STATE_CHANGE_NO_PREROLL          = 3
+} GstStateChangeReturn;
+
+GstStateChangeReturn gst_element_set_state (GstElement element, GstState state);
+
+// Element factory
+
+GstElement gst_element_factory_make ([string]const gchar *factoryname, [string]const gchar *name);
+
+// Pipeline
+
+GstElement gst_pipeline_new ([string]const gchar *name);
+
+// Bin
+
+quote(C,"GstBin gst_bin_of_element(GstElement e) { return (GstBin)e; };");
+GstBin gst_bin_of_element(GstElement e);
+
+gboolean gst_bin_add (GstBin bin, GstElement element);

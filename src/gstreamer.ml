@@ -14,6 +14,7 @@ struct
   type t = gstElement
 
   let set_property = set_element_property
+  let set_caps = set_element_caps
 
   let link src dst = ignore (gst_element_link src dst) (* TODO: raise *)
 
@@ -46,4 +47,13 @@ struct
 
   let add_many b e =
     List.iter (add b) e
+end
+
+module Caps =
+struct
+  type t = gstCaps
+
+  let to_string = gst_caps_to_string
+
+  let of_string = gst_caps_from_string
 end

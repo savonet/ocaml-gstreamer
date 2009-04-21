@@ -12,7 +12,7 @@ let () =
   let audiosink = Element_factory.make "alsasink" "play_audio" in
     Bin.add_many (Bin.of_element bin) [filesrc; decoder; conv; resample; audiosink];
     Element.link_many [filesrc; decoder; conv; resample; audiosink];
-    Element.set_state bin State_playing;
+    ignore (Element.set_state bin State_playing);
     while true do
       Unix.sleep 1
     done;

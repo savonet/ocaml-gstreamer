@@ -17,11 +17,15 @@ quote(C,"void check_null_pointer(void *p) { if (p == NULL) caml_raise_constant(*
 
 typedef [abstract,ptr,finalize(gst_object_unref),errorcheck(check_null_pointer)] void *GstElement;
 typedef [abstract,ptr,finalize(gst_object_unref),errorcheck(check_null_pointer)] void *GstBin;
+typedef [abstract,ptr,finalize(gst_object_unref),errorcheck(check_null_pointer)] void *GstCaps;
 
 // Element
 
 quote(C,"void set_element_property (GstElement e, char *n, char *v) { g_object_set (e, n, v, NULL); }")
 void set_element_property (GstElement e, [string]char *n, [string]char *v);
+
+quote(C,"void set_element_caps (GstElement e, GstCaps c) { g_object_set (e, \"caps\", c, NULL); }")
+void set_element_caps (GstElement e, GstCaps c);
 
 gboolean gst_element_link (GstElement src, GstElement dest);
 
@@ -34,10 +38,10 @@ typedef enum {
 } GstState;
 
 typedef enum {
-  GST_STATE_CHANGE_FAILURE             = 0,
-  GST_STATE_CHANGE_SUCCESS             = 1,
-  GST_STATE_CHANGE_ASYNC               = 2,
-  GST_STATE_CHANGE_NO_PREROLL          = 3
+  State_change_failure             = 0,
+  State_change_success             = 1,
+  State_change_async               = 2,
+  State_change_no_preroll          = 3
 } GstStateChangeReturn;
 
 GstStateChangeReturn gst_element_set_state (GstElement element, GstState state);
@@ -56,3 +60,8 @@ quote(C,"GstBin gst_bin_of_element(GstElement e) { return (GstBin)e; };");
 GstBin gst_bin_of_element(GstElement e);
 
 gboolean gst_bin_add (GstBin bin, GstElement element);
+
+// Caps
+
+[string] gchar * gst_caps_to_string (GstCaps caps);
+GstCaps gst_caps_from_string ([string]const gchar *string);

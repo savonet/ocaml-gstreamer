@@ -13,7 +13,10 @@ module Element =
 struct
   type t = gstElement
 
-  let set_property = set_element_property
+  let set_property_string = set_element_property_string
+  let set_property_bool = set_element_property_bool
+  let set_property_int = set_element_property_int
+
   let set_caps = set_element_caps
 
   let link src dst = ignore (gst_element_link src dst) (* TODO: raise *)

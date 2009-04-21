@@ -1,6 +1,7 @@
 // glib types
 
 typedef unsigned int guint;
+typedef int gint;
 typedef char gchar;
 typedef boolean gboolean;
 
@@ -21,8 +22,14 @@ typedef [abstract,ptr,finalize(gst_object_unref),errorcheck(check_null_pointer)]
 
 // Element
 
-quote(C,"void set_element_property (GstElement e, char *n, char *v) { g_object_set (e, n, v, NULL); }")
-void set_element_property (GstElement e, [string]char *n, [string]char *v);
+quote(C,"void set_element_property_string (GstElement e, char *n, char *v) { g_object_set (e, n, v, NULL); }")
+void set_element_property_string (GstElement e, [string]char *n, [string]char *v);
+
+quote(C,"void set_element_property_bool (GstElement e, char *n, gboolean v) { g_object_set (e, n, v, NULL); }")
+void set_element_property_bool (GstElement e, [string]char *n, gboolean v);
+
+quote(C,"void set_element_property_int (GstElement e, char *n, gint v) { g_object_set (e, n, v, NULL); }")
+void set_element_property_int (GstElement e, [string]char *n, gint v);
 
 quote(C,"void set_element_caps (GstElement e, GstCaps c) { g_object_set (e, \"caps\", c, NULL); }")
 void set_element_caps (GstElement e, GstCaps c);

@@ -5,7 +5,7 @@ let () =
   Printf.printf "%s\n%!" (version_string ());
   let bin = Pipeline.create "pipeline" in
   let filesrc = Element_factory.make "filesrc" "disk_source" in
-  Element.set_property filesrc "location" "/home/smimram/09 Cheek To Cheek.mp3";
+  Element.set_property_string filesrc "location" "/home/smimram/09 Cheek To Cheek.mp3";
   let decoder = Element_factory.make "mad" "decode" in
   let conv = Element_factory.make "audioconvert" "audioconvert" in
   let resample = Element_factory.make "audioresample" "audioresample" in

@@ -16,9 +16,13 @@ void gst_version ([out]guint *major, [out]guint *minor, [out]guint *micro, [out]
 
 quote(C,"void check_null_pointer(void *p) { if (p == NULL) caml_raise_constant(*caml_named_value(\"gst_exn_null_pointer\"));  }");
 
-typedef [abstract,ptr,finalize(gst_object_unref),errorcheck(check_null_pointer)] void *GstElement;
-typedef [abstract,ptr,finalize(gst_object_unref),errorcheck(check_null_pointer)] void *GstBin;
-typedef [abstract,ptr,finalize(gst_object_unref),errorcheck(check_null_pointer)] void *GstCaps;
+quote(C,"void gst_finalize_element(GstElement *o) { gst_object_unref(*o); }")
+quote(C,"void gst_finalize_bin(GstBin *o) { gst_object_unref(*o); }")
+quote(C,"void gst_finalize_caps(GstCaps *o) { gst_object_unref(*o); }")
+
+typedef [abstract,ptr,finalize(gst_finalize_element),errorcheck(check_null_pointer)] void *GstElement;
+typedef [abstract,ptr,finalize(gst_finalize_bin),errorcheck(check_null_pointer)] void *GstBin;
+typedef [abstract,ptr,finalize(gst_finalize_caps),errorcheck(check_null_pointer)] void *GstCaps;
 
 // Element
 

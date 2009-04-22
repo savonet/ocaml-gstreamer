@@ -13,7 +13,6 @@ let () =
     Bin.add_many (Bin.of_element bin) [filesrc; decoder; conv; resample; audiosink];
     Element.link_many [filesrc; decoder; conv; resample; audiosink];
     ignore (Element.set_state bin State_playing);
-    while true do
-      Unix.sleep 1
-    done;
-    ()
+    Unix.sleep 5;
+    ignore (Element.set_state bin State_null);
+    Gc.full_major ()

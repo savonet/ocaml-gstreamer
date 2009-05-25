@@ -1,3 +1,12 @@
+0.1.3 ()
+=====
+* Added NO_CUSTOM to build
+  in standard mode.
+* Makefile now honnors LIBDIRS
+  variable for linking against libraries
+  located in other places than then standard
+  ones.
+
 0.1.2 (17-02-2009)
 =====
 * Fix invalid strlen call leading to segfaults (#219).

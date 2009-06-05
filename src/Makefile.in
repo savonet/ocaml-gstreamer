@@ -37,6 +37,7 @@ CFLAGS = @CFLAGS@ @gstreamer_CFLAGS@ -Wall -DNATIVE_CODE
 CPPFLAGS = @CPPFLAGS@
 INCDIRS = @INC@
 NO_CUSTOM = yes
+CAMLIDLFLAGS = -no-include
 
 all: $(BEST)
 

@@ -5,13 +5,15 @@ exception Null_pointer
 let () =
   Callback.register_exception "gst_exn_null_pointer" Null_pointer
 
-let init ?argv () = gst_init (match argv with None -> 0 | Some argv -> Array.length argv) argv
+let init ?argv () = 
+  ocaml_gst_init (match argv with None -> 0 | Some argv -> Array.length argv)
+            argv
 let version = gst_version
 let version_string = gst_version_string
 
 module Element =
 struct
-  type t = gstElement
+  type t = pGstElement
 
   let set_property_string = set_element_property_string
   let set_property_bool = set_element_property_bool
@@ -42,7 +44,7 @@ end
 
 module Bin =
 struct
-  type t = gstBin
+  type t = pGstBin
 
   let of_element = gst_bin_of_element
 
@@ -54,7 +56,7 @@ end
 
 module Caps =
 struct
-  type t = gstCaps
+  type t = pGstCaps
 
   let to_string = gst_caps_to_string
 

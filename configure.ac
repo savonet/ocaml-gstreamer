@@ -116,7 +116,7 @@ AC_SUBST([jack_LDFLAGS])
 # Check for samplerate
 PKG_CHECK_MODULES(samplerate, samplerate >= 0.0.15)
 
-LIBS="$LDFLAGS -lsamplerate"
+LIBS="$LIBS -lsamplerate"
 
 if test "$OCAMLOPT" = no ; then
     BEST=byte

@@ -8,6 +8,8 @@
   variable for linking against libraries
   located in other places than then standard
   ones.
+* configure.ac: Use LIBS instead of LDFLAGS 
+  when redefining LIBS
 
 0.1.2 (17-02-2009)
 =====

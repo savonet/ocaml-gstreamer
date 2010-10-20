@@ -66,7 +66,13 @@ sig
   val of_string : string -> t
 end
 
-module AppSink :
+module App_sink :
 sig
-  val pull_buffer : Element.t -> (int, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1.t
+  type t
+
+  val of_element : Element.t -> t
+
+  val pull_buffer : t -> (int, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1.t
+
+  val pull_buffer_string : t -> string
 end

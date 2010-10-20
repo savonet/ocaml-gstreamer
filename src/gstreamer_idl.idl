@@ -104,3 +104,18 @@ gst_buffer_unref (gstbuf); \
 value ba = caml_ba_alloc(CAML_BA_MANAGED | CAML_BA_C_LAYOUT | CAML_BA_UINT8, 1, data, &len); \
 return ba; \
 }");
+
+quote(C," \
+value caml_app_sink_pull_buffer_string(value as){ \
+GstBuffer *gstbuf; \
+GstElement *e; \
+struct camlidl_ctx_struct _ctxs = { CAMLIDL_TRANSIENT, NULL }; \
+camlidl_ctx _ctx = &_ctxs; \
+camlidl_ml2c_gstreamer_idl_pGstElement(as, &e, _ctx); \
+gstbuf = gst_app_sink_pull_buffer(GST_APP_SINK(e)); \
+intnat len = gstbuf->size; \
+value s = caml_alloc_string(len); \
+memcpy(String_val(s), gstbuf->data, len); \
+gst_buffer_unref (gstbuf); \
+return s; \
+}");

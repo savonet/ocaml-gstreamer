@@ -78,7 +78,13 @@ struct
   let of_string = gst_caps_from_string
 end
 
-module AppSink =
+module App_sink =
 struct
-  external pull_buffer : pGstElement -> (int, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1.t = "caml_app_sink_pull_buffer"
+  type t = Element.t
+
+  let of_element e = e
+
+  external pull_buffer : t -> (int, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1.t = "caml_app_sink_pull_buffer"
+
+  external pull_buffer_string : t -> string = "caml_app_sink_pull_buffer_string"
 end

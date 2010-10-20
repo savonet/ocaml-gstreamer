@@ -7,7 +7,7 @@ let () =
   let sink = Bin.get_by_name (Bin.of_element bin) "sink" in
   ignore (Element.set_state bin State_playing);
   while true do
-    let _ = AppSink.pull_buffer sink in
+    let _ = App_sink.pull_buffer (App_sink.of_element sink) in
     ()
   done;
   ignore (Element.set_state bin State_null);

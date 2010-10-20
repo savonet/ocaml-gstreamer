@@ -39,7 +39,8 @@ struct
       done
 
   let set_state e s =
-    gst_element_set_state e (gstState_of_state s)
+    (* TODO: return value? *)
+    ignore (gst_element_set_state e (gstState_of_state s))
 end
 
 module Element_factory =
@@ -50,6 +51,8 @@ end
 module Pipeline =
 struct
   let create = gst_pipeline_new
+
+  let parse_launch = parse_launch
 end
 
 module Bin =
@@ -62,6 +65,8 @@ struct
 
   let add_many b e =
     List.iter (add b) e
+
+  let get_by_name = gst_bin_get_by_name
 end
 
 module Caps =
@@ -71,4 +76,9 @@ struct
   let to_string = gst_caps_to_string
 
   let of_string = gst_caps_from_string
+end
+
+module AppSink =
+struct
+  external pull_buffer : pGstElement -> (int, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1.t = "caml_app_sink_pull_buffer"
 end

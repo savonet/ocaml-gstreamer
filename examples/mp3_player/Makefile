@@ -1,6 +1,6 @@
 SOURCES = player.ml
 RESULT = player
-LIBS = unix gstreamer
+LIBS = unix bigarray gstreamer
 CLIBS = camlidl
 INCDIRS = ../../src
 

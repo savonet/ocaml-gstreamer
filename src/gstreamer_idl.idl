@@ -96,11 +96,13 @@ GstElement *e; \
 struct camlidl_ctx_struct _ctxs = { CAMLIDL_TRANSIENT, NULL }; \
 camlidl_ctx _ctx = &_ctxs; \
 camlidl_ml2c_gstreamer_idl_pGstElement(as, &e, _ctx); \
+caml_enter_blocking_section(); \
 gstbuf = gst_app_sink_pull_buffer(GST_APP_SINK(e)); \
 intnat len = gstbuf->size; \
 char *data = malloc(len); \
 memcpy(data, gstbuf->data, len); \
 gst_buffer_unref (gstbuf); \
+caml_leave_blocking_section(); \
 value ba = caml_ba_alloc(CAML_BA_MANAGED | CAML_BA_C_LAYOUT | CAML_BA_UINT8, 1, data, &len); \
 return ba; \
 }");
@@ -112,8 +114,10 @@ GstElement *e; \
 struct camlidl_ctx_struct _ctxs = { CAMLIDL_TRANSIENT, NULL }; \
 camlidl_ctx _ctx = &_ctxs; \
 camlidl_ml2c_gstreamer_idl_pGstElement(as, &e, _ctx); \
+caml_enter_blocking_section(); \
 gstbuf = gst_app_sink_pull_buffer(GST_APP_SINK(e)); \
 intnat len = gstbuf->size; \
+caml_leave_blocking_section(); \
 value s = caml_alloc_string(len); \
 memcpy(String_val(s), gstbuf->data, len); \
 gst_buffer_unref (gstbuf); \

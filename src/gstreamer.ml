@@ -5,11 +5,20 @@ exception Null_pointer
 let () =
   Callback.register_exception "gst_exn_null_pointer" Null_pointer
 
-let init ?argv () = 
-  ocaml_gst_init (match argv with None -> 0 | Some argv -> Array.length argv)
-            argv
+let init ?argv () =
+  ocaml_gst_init (match argv with None -> 0 | Some argv -> Array.length argv) argv
+
 let version = gst_version
 let version_string = gst_version_string
+
+type state =
+  | State_void_pending
+  | State_null
+  | State_ready
+  | State_paused
+  | State_playing
+
+let gstState_of_state (s:state) : gstState = (Obj.magic s:gstState)
 
 module Element =
 struct
@@ -29,7 +38,8 @@ struct
         link e.(i) e.(i+1)
       done
 
-  let set_state = gst_element_set_state
+  let set_state e s =
+    gst_element_set_state e (gstState_of_state s)
 end
 
 module Element_factory =

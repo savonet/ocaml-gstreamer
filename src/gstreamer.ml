@@ -1,9 +1,11 @@
 include Gstreamer_idl
 
 exception Null_pointer
+exception Error of string
 
 let () =
-  Callback.register_exception "gst_exn_null_pointer" Null_pointer
+  Callback.register_exception "gst_exn_null_pointer" Null_pointer;
+  Callback.register_exception "gst_exn_gerror" (Error "")
 
 let init ?argv () =
   ocaml_gst_init (match argv with None -> 0 | Some argv -> Array.length argv) argv

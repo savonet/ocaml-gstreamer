@@ -85,7 +85,19 @@ pGstElement gst_bin_get_by_name (pGstBin bin, [string]const gchar *name);
 pGstCaps gst_caps_from_string ([string]const gchar *string);
 
 // Parse
-quote(C,"GstElement* parse_launch(const gchar *pipeline_description) { return gst_parse_launch(pipeline_description, NULL); };");
+quote(C,"\
+GstElement* parse_launch(const gchar *pipeline_description) { \
+GError *err = NULL; \
+GstElement *e; \
+e = gst_parse_launch(pipeline_description, &err); \
+if (err != NULL) { \
+value s = caml_copy_string(err->message); \
+if (e) { gst_object_unref(e); } \
+g_error_free(err); \
+caml_raise_with_arg(*caml_named_value(\"gst_exn_gerror\"), s);  \
+} \
+return e; \
+};");
 pGstElement parse_launch ([string]const gchar *pipeline_description);
 
 // App_sink

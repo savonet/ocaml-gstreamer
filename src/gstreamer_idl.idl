@@ -110,6 +110,10 @@ camlidl_ctx _ctx = &_ctxs; \
 camlidl_ml2c_gstreamer_idl_pGstElement(as, &e, _ctx); \
 caml_enter_blocking_section(); \
 gstbuf = gst_app_sink_pull_buffer(GST_APP_SINK(e)); \
+if (!gstbuf) { \
+caml_leave_blocking_section(); \
+caml_raise_constant(*caml_named_value(\"gst_exn_failure\")); \
+} \
 intnat len = gstbuf->size; \
 char *data = malloc(len); \
 memcpy(data, gstbuf->data, len); \
@@ -128,6 +132,10 @@ camlidl_ctx _ctx = &_ctxs; \
 camlidl_ml2c_gstreamer_idl_pGstElement(as, &e, _ctx); \
 caml_enter_blocking_section(); \
 gstbuf = gst_app_sink_pull_buffer(GST_APP_SINK(e)); \
+if (!gstbuf) { \
+caml_leave_blocking_section(); \
+caml_raise_constant(*caml_named_value(\"gst_exn_failure\")); \
+} \
 intnat len = gstbuf->size; \
 caml_leave_blocking_section(); \
 value s = caml_alloc_string(len); \

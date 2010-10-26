@@ -1,4 +1,6 @@
 exception Null_pointer
+exception Error of string
+exception Failure
 
 val init : ?argv:string array -> unit -> unit
 
@@ -29,6 +31,7 @@ sig
 
   val link_many : t list -> unit
 
+  (** Raises [Failure] is case of error. *)
   val set_state : t -> state -> unit
 end
 
@@ -39,9 +42,12 @@ end
 
 module Pipeline :
 sig
-  val create : string -> Element.t
+  type t = Element.t
 
-  val parse_launch : string -> Element.t
+  val create : string -> t
+
+  (** Raises [Error] if something goes wrong. *)
+  val parse_launch : string -> t
 end
 
 module Bin :
@@ -72,7 +78,9 @@ sig
 
   val of_element : Element.t -> t
 
+  (** Raises [Failure] if the stream is stopped or on EOS. *)
   val pull_buffer : t -> (int, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1.t
 
+  (** Same as [pull_buffer] but returns the buffer as a string. *)
   val pull_buffer_string : t -> string
 end

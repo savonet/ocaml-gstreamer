@@ -2,10 +2,12 @@ include Gstreamer_idl
 
 exception Null_pointer
 exception Error of string
+exception Failure
 
 let () =
   Callback.register_exception "gst_exn_null_pointer" Null_pointer;
-  Callback.register_exception "gst_exn_gerror" (Error "")
+  Callback.register_exception "gst_exn_gerror" (Error "");
+  Callback.register_exception "gst_exn_failure" Failure
 
 let init ?argv () =
   ocaml_gst_init (match argv with None -> 0 | Some argv -> Array.length argv) argv
@@ -42,7 +44,9 @@ struct
 
   let set_state e s =
     (* TODO: return value? *)
-    ignore (gst_element_set_state e (gstState_of_state s))
+    match gst_element_set_state e (gstState_of_state s) with
+      | GST_STATE_CHANGE_FAILURE -> raise Failure
+      | _ -> ()
 end
 
 module Element_factory =
@@ -52,6 +56,8 @@ end
 
 module Pipeline =
 struct
+  type t = Element.t
+
   let create = gst_pipeline_new
 
   let parse_launch = parse_launch

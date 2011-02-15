@@ -72,6 +72,15 @@ sig
   val of_string : string -> t
 end
 
+module App_src :
+sig
+  type t
+
+  val of_element : Element.t -> t
+
+  val push_buffer_string : t -> string -> unit
+end
+
 module App_sink :
 sig
   type t

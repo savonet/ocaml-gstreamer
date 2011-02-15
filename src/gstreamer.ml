@@ -86,6 +86,15 @@ struct
   let of_string = gst_caps_from_string
 end
 
+module App_src =
+struct
+  type t = Element.t
+
+  let of_element e = e
+
+  external push_buffer_string : t -> string -> unit = "caml_app_src_push_buffer_string"
+end
+
 module App_sink =
 struct
   type t = Element.t

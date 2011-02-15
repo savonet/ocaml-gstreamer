@@ -143,3 +143,23 @@ memcpy(String_val(s), gstbuf->data, len); \
 gst_buffer_unref (gstbuf); \
 return s; \
 }");
+
+quote(C," \
+value caml_app_src_push_buffer_string(value as, value buf){ \
+int buflen = caml_string_length(buf); \
+GstBuffer *gstbuf = gst_buffer_new_and_alloc(buflen); \
+memcpy(GST_BUFFER_DATA(gstbuf), String_val(buf), buflen); \
+GstFlowReturn ret; \
+GstElement *e; \
+struct camlidl_ctx_struct _ctxs = { CAMLIDL_TRANSIENT, NULL }; \
+camlidl_ctx _ctx = &_ctxs; \
+camlidl_ml2c_gstreamer_idl_pGstElement(as, &e, _ctx); \
+caml_enter_blocking_section(); \
+ret = gst_app_src_push_buffer(GST_APP_SRC(e), gstbuf); \
+if (ret != GST_FLOW_OK) { \
+caml_leave_blocking_section(); \
+caml_raise_constant(*caml_named_value(\"gst_exn_failure\")); \
+} \
+caml_leave_blocking_section(); \
+return Val_unit; \
+}");

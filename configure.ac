@@ -17,6 +17,7 @@ AC_CHECK_OCAML_COMPILERS()
 
 AC_PROG_CC()
 AC_CHECK_TOOL([AR],[ar],no)
+AC_SUBST(AR)
 PKG_PROG_PKG_CONFIG()
 #PKG_CHECK_MODULES(jack, jack, , [AC_MSG_ERROR(jack not found.)])
 

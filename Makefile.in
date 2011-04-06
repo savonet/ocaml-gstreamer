@@ -2,7 +2,7 @@
 
 PROGNAME := ocaml-bjack
 DISTFILES := CHANGES COPYING TIPS Makefile.in README \
-	bootstrap configure configure.ac \
+	bootstrap configure configure.ac m4/*.m4 \
 	src/*.ml src/*.mli src/*.c src/Makefile.in src/META.in \
 	src/*.h src/OCamlMakefile 
 VERSION = @VERSION@

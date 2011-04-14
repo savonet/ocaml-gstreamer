@@ -29,16 +29,23 @@ if ! $PKG_CONFIG --exists gstreamer-0.10; then
         AC_MSG_ERROR([gstreamer not found])
 fi
 gstreamer_CFLAGS=`$PKG_CONFIG --cflags gstreamer-0.10`
-AC_SUBST([gstreamer_CFLAGS])
 gstreamer_LIBS=`$PKG_CONFIG --libs-only-l gstreamer-0.10`
-AC_SUBST([gstreamer_LIBS])
 gstreamer_LDFLAGS=`$PKG_CONFIG --libs-only-L gstreamer-0.10`
-AC_SUBST([gstreamer_LDFLAGS])
+
+if ! $PKG_CONFIG --exists gstreamer-app-0.10; then
+        AC_MSG_ERROR([gstreamer-app not found])
+fi
+gstreamer_CFLAGS=`$PKG_CONFIG --cflags gstreamer-app-0.10`
+gstreamer_LIBS=`$PKG_CONFIG --libs-only-l gstreamer-app-0.10`
+gstreamer_LDFLAGS=`$PKG_CONFIG --libs-only-L gstreamer-app-0.10`
 
 # substitutions to perform
 AC_SUBST(VERSION)
 AC_SUBST(INC)
 AC_SUBST(requires)
+AC_SUBST([gstreamer_CFLAGS])
+AC_SUBST([gstreamer_LIBS])
+AC_SUBST([gstreamer_LDFLAGS])
 
 # Finally create the Makefile and samples
 AC_CONFIG_FILES([Makefile],[chmod a-w Makefile])

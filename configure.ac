@@ -39,6 +39,9 @@ gstreamer_CFLAGS=`$PKG_CONFIG --cflags gstreamer-app-0.10`
 gstreamer_LIBS=`$PKG_CONFIG --libs-only-l gstreamer-app-0.10`
 gstreamer_LDFLAGS=`$PKG_CONFIG --libs-only-L gstreamer-app-0.10`
 
+# This module requires camlidl.
+requires=camlidl
+
 # substitutions to perform
 AC_SUBST(VERSION)
 AC_SUBST(INC)

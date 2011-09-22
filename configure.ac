@@ -22,22 +22,8 @@ AC_PROG_CC()
 AC_CHECK_TOOL([AR],[ar],no)
 AC_SUBST(AR)
 PKG_PROG_PKG_CONFIG()
-#PKG_CHECK_MODULES(gstreamer, gstreamer-0.10, , [AC_MSG_ERROR(gstreamer not found.)])
-
-# PKG_CHECK_MODULES loses when you need --libs-only-[lL]
-if ! $PKG_CONFIG --exists gstreamer-0.10; then
-        AC_MSG_ERROR([gstreamer not found])
-fi
-gstreamer_CFLAGS=`$PKG_CONFIG --cflags gstreamer-0.10`
-gstreamer_LIBS=`$PKG_CONFIG --libs-only-l gstreamer-0.10`
-gstreamer_LDFLAGS=`$PKG_CONFIG --libs-only-L gstreamer-0.10`
-
-if ! $PKG_CONFIG --exists gstreamer-app-0.10; then
-        AC_MSG_ERROR([gstreamer-app not found])
-fi
-gstreamer_CFLAGS=`$PKG_CONFIG --cflags gstreamer-app-0.10`
-gstreamer_LIBS=`$PKG_CONFIG --libs-only-l gstreamer-app-0.10`
-gstreamer_LDFLAGS=`$PKG_CONFIG --libs-only-L gstreamer-app-0.10`
+PKG_CONFIG_CHECK_MODULE([gstreamer-0.10])
+PKG_CONFIG_CHECK_MODULE([gstreamer-app-0.10])
 
 # This module requires camlidl.
 requires=camlidl

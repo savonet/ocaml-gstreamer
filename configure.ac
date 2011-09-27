@@ -1,26 +1,16 @@
 
 # check for one particular file of the sources 
-AC_INIT(ocaml-gstreamer, 0.1.0, savonet-users@lists.sourceforge.net)
+AC_INIT([ocaml-gstreamer],[0.1.0],[savonet-users@lists.sourceforge.net])
 
 VERSION=$PACKAGE_VERSION
 AC_MSG_RESULT([configuring $PACKAGE_STRING])
 
-# Add prefix to compilation variables
-# if passed
-if test "x$prefix" != "xNONE"; then
-        CFLAGS="$CFLAGS -I$prefix/include"
-        LDFLAGS="$LDFLAGS -L$prefix/lib"
-        CPPFLAGS="$CPPFLAGS -I$prefix/include"
-fi
+AC_BASE_CHECKS()
 
-AC_CHECK_OCAML_COMPILERS()
 if test "$CAMLIDL" = no ; then
         AC_MSG_ERROR(Cannot find camlidl.)
 fi
 
-AC_PROG_CC()
-AC_CHECK_TOOL([AR],[ar],no)
-AC_SUBST(AR)
 PKG_PROG_PKG_CONFIG()
 PKG_CONFIG_CHECK_MODULE([gstreamer-0.10])
 PKG_CONFIG_CHECK_MODULE([gstreamer-app-0.10])

@@ -60,7 +60,12 @@ typedef enum {
   GST_STATE_CHANGE_NO_PREROLL          = 3
 } GstStateChangeReturn;
 
+typedef enum {
+  GST_CLOCK_TIME_NONE
+} GstClockTime;
+
 GstStateChangeReturn gst_element_set_state (pGstElement element, GstState state);
+GstStateChangeReturn gst_element_get_state (pGstElement element, [out]GstState *state, [out]GstState *pending, GstClockTime timeout);
 
 // Element factory
 

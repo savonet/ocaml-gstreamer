@@ -9,7 +9,7 @@ val version : unit -> int * int * int * int
 val version_string : unit -> string
 
 type state =
-    State_void_pending
+  | State_void_pending
   | State_null
   | State_ready
   | State_paused
@@ -33,6 +33,8 @@ sig
 
   (** Raises [Failure] is case of error. *)
   val set_state : t -> state -> unit
+
+  val get_state : t -> state
 end
 
 module Element_factory :

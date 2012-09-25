@@ -23,6 +23,7 @@ type state =
   | State_playing
 
 let gstState_of_state (s:state) : gstState = (Obj.magic s:gstState)
+let state_of_gstState (s:gstState) : state = (Obj.magic s:state)
 
 module Element =
 struct
@@ -47,6 +48,10 @@ struct
     match gst_element_set_state e (gstState_of_state s) with
       | GST_STATE_CHANGE_FAILURE -> raise Failure
       | _ -> ()
+
+  let get_state e =
+    let ret,state,pending = gst_element_get_state e GST_CLOCK_TIME_NONE in
+    state_of_gstState state
 end
 
 module Element_factory =

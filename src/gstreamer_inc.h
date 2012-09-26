@@ -8,3 +8,5 @@
 typedef GstElement *pGstElement;
 typedef GstBin *pGstBin;
 typedef GstCaps *pGstCaps;
+
+GstElement* parse_launch(const gchar *pipeline_description);

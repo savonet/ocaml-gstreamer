@@ -26,7 +26,7 @@ DVIPS = @DVIPS@
 PS2PDF = @PS2PDF@
 OCAMLLIBPATH = @CAMLLIBPATH@
 
-SOURCES = gstreamer_idl.idl gstreamer.mli gstreamer.ml
+SOURCES = gstreamer_idl.idl gstreamer_idl_morestubs.c gstreamer.mli gstreamer.ml
 RESULT = gstreamer
 OCAMLDOCFLAGS = -stars
 LIBINSTALL_FILES = $(wildcard *.mli *.cmi *.cma *.cmxa *.cmx *.a *.so)

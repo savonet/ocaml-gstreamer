@@ -1,0 +1,39 @@
+ocaml-gstreamer
+
+
+This package contains an O'Caml interface for 
+Multimedia framework, 
+otherwise known as gstreamer.
+
+Please read the COPYING file before using this software.
+
+Prerequisites:
+==============
+
+- ocaml >= 3.0.6 (haven't tried earlier versions)
+
+- gstreamer >= 0.10.23 (haven't tried earlier versions)
+
+- findlib >= 0.8.1 (haven't tried earlier versions)
+
+Compilation:
+============
+
+	$ make all
+
+This should build both the native and the byte-code version of the
+extension library.
+
+Installation:
+=============
+
+	$ make install
+
+This should install the library file (using ocamlfind) in the
+appropriate place.
+
+Author:
+=======
+
+This author of this software may be contacted by electronic mail
+at the following address: savonet-users@lists.sourceforge.net.

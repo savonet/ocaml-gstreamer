@@ -275,9 +275,9 @@ CAMLprim value ocaml_gstreamer_appsrc_push_buffer_string(value _as, value _buf)
   GstFlowReturn ret;
 
   memcpy(GST_BUFFER_DATA(gstbuf), String_val(_buf), buflen);
-  caml_enter_blocking_section();
+  caml_acquire_runtime_system();
   ret = gst_app_src_push_buffer(as->appsrc, gstbuf);
-  caml_leave_blocking_section();
+  caml_release_runtime_system();
   //TODO: raise
   assert(ret == GST_FLOW_OK);
 
@@ -286,10 +286,13 @@ CAMLprim value ocaml_gstreamer_appsrc_push_buffer_string(value _as, value _buf)
 
 static void appsrc_need_data_cb(GstAppSrc *gas, guint length, gpointer user_data)
 {
-  caml_c_thread_register();
   //TODO: we need to unregister at some point!
   appsrc *as = (appsrc*)user_data;
+  caml_c_thread_register();
+  caml_acquire_runtime_system();
   caml_callback(as->need_data_cb, Val_int(length));
+  caml_release_runtime_system();
+  caml_c_thread_unregister();
 }
 
 CAMLprim value ocaml_gstreamer_appsrc_connect_need_data(value _as, value f)
@@ -316,7 +319,7 @@ CAMLprim value ocaml_gstreamer_appsink_pull_buffer(value _as)
   char *data;
   intnat len;
 
-  caml_enter_blocking_section();
+  caml_acquire_runtime_system();
   gstbuf = gst_app_sink_pull_buffer(as);
   //TODO: raise exception
   assert(gstbuf);
@@ -324,7 +327,7 @@ CAMLprim value ocaml_gstreamer_appsink_pull_buffer(value _as)
   data = malloc(len);
   memcpy(data, gstbuf->data, len);
   gst_buffer_unref(gstbuf);
-  caml_leave_blocking_section();
+  caml_release_runtime_system();
 
   value ba = caml_ba_alloc(CAML_BA_MANAGED | CAML_BA_C_LAYOUT | CAML_BA_UINT8, 1, data, &len);
   CAMLreturn(ba);

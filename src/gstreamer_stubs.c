@@ -214,7 +214,7 @@ static void disconnect_need_data(appsrc *as)
 {
   if(as->need_data_cb)
     {
-      caml_remove_global_root(&as->need_data_cb);
+      caml_remove_generational_global_root(&as->need_data_cb);
       as->need_data_cb = 0;
     }
   if(as->need_data_hid)
@@ -297,7 +297,7 @@ CAMLprim value ocaml_gstreamer_appsrc_connect_need_data(value _as, value f)
   CAMLparam2(_as, f);
   appsrc *as = Appsrc_val(_as);
   disconnect_need_data(as);
-  caml_register_global_root(&as->need_data_cb);
+  caml_register_generational_global_root(&as->need_data_cb);
   as->need_data_cb = f;
   as->need_data_hid = g_signal_connect(as->appsrc, "need-data", G_CALLBACK(appsrc_need_data_cb), as);
   assert(as->need_data_hid);

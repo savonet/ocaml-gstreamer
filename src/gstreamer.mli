@@ -41,9 +41,15 @@ module Pipeline : sig
 end
 
 module App_src : sig
-  type t = Element.t
+  type t
+
+  val to_element : t -> Element.t
+
+  val of_element : Element.t -> t
 
   val push_buffer_string : t -> string -> unit
+
+  val connect_need_data : t -> (int -> unit) -> unit
 end
 
 module App_sink : sig

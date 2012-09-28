@@ -6,6 +6,7 @@
 #include <caml/custom.h>
 #include <caml/bigarray.h>
 #include <caml/camlidlruntime.h>
+#include <caml/threads.h>
 
 #include <string.h>
 #include <assert.h>
@@ -201,23 +202,105 @@ CAMLprim value ocaml_gstreamer_pipeline_parse_launch(value s)
 
 /***** Appsrc *****/
 
-#define Appsrc_val(v) (GST_APP_SRC(Element_val(v)))
+typedef struct {
+  GstAppSrc *appsrc;
+  value need_data_cb; // Callback function
+  gulong need_data_hid; // Callback handler ID
+} appsrc;
+
+#define Appsrc_val(v) (*(appsrc**)Data_custom_val(v))
+
+static void disconnect_need_data(appsrc *as)
+{
+  if(as->need_data_cb)
+    {
+      caml_remove_global_root(&as->need_data_cb);
+      as->need_data_cb = 0;
+    }
+  if(as->need_data_hid)
+    {
+      g_signal_handler_disconnect(as->appsrc, as->need_data_hid);
+      as->need_data_hid = 0;
+    }
+}
+
+static void finalize_appsrc(value v)
+{
+  appsrc *as = Appsrc_val(v);
+  disconnect_need_data(as);
+  free(as);
+}
+
+static struct custom_operations appsrc_ops =
+  {
+    "ocaml_gstreamer_appsrc",
+    finalize_appsrc,
+    custom_compare_default,
+    custom_hash_default,
+    custom_serialize_default,
+    custom_deserialize_default
+  };
+
+static value value_of_appsrc(GstAppSrc *e)
+{
+  value ans = caml_alloc_custom(&appsrc_ops, sizeof(GstAppSrc*), 0, 1);
+  appsrc *as = malloc(sizeof(appsrc));
+  as->appsrc = e;
+  as->need_data_cb = 0;
+  as->need_data_hid = 0;
+  Appsrc_val(ans) = as;
+  return ans;
+}
+
+CAMLprim value ocaml_gstreamer_appsrc_of_element(value _e)
+{
+  CAMLparam1(_e);
+  GstElement *e = Element_val(_e);
+  CAMLreturn(value_of_appsrc(GST_APP_SRC(e)));
+}
+
+CAMLprim value ocaml_gstreamer_appsrc_to_element(value _as)
+{
+  CAMLparam1(_as);
+  appsrc *as = Appsrc_val(_as);
+  CAMLreturn(value_of_element(GST_ELEMENT(as->appsrc)));
+}
 
 CAMLprim value ocaml_gstreamer_appsrc_push_buffer_string(value _as, value _buf)
 {
   CAMLparam2(_as, _buf);
   int buflen = caml_string_length(_buf);
-  GstAppSrc *as = Appsrc_val(_as);
+  appsrc *as = Appsrc_val(_as);
   GstBuffer *gstbuf = gst_buffer_new_and_alloc(buflen);
   GstFlowReturn ret;
 
   memcpy(GST_BUFFER_DATA(gstbuf), String_val(_buf), buflen);
   caml_enter_blocking_section();
-  ret = gst_app_src_push_buffer(as, gstbuf);
+  ret = gst_app_src_push_buffer(as->appsrc, gstbuf);
   caml_leave_blocking_section();
   //TODO: raise
   assert(ret == GST_FLOW_OK);
 
+  CAMLreturn(Val_unit);
+}
+
+static void appsrc_need_data_cb(GstAppSrc *gas, guint length, gpointer user_data)
+{
+  caml_c_thread_register();
+  //TODO: we need to unregister at some point!
+  appsrc *as = (appsrc*)user_data;
+  caml_callback(as->need_data_cb, Val_int(length));
+}
+
+CAMLprim value ocaml_gstreamer_appsrc_connect_need_data(value _as, value f)
+{
+  CAMLparam2(_as, f);
+  appsrc *as = Appsrc_val(_as);
+  disconnect_need_data(as);
+  caml_register_global_root(&as->need_data_cb);
+  as->need_data_cb = f;
+  as->need_data_hid = g_signal_connect(as->appsrc, "need-data", G_CALLBACK(appsrc_need_data_cb), as);
+  assert(as->need_data_hid);
   CAMLreturn(Val_unit);
 }
 

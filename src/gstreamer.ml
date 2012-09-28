@@ -42,9 +42,15 @@ module Pipeline = struct
 end
 
 module App_src = struct
-  type t = Element.t
+  type t
+
+  external of_element : Element.t -> t = "ocaml_gstreamer_appsrc_of_element"
+
+  external to_element : t -> Element.t = "ocaml_gstreamer_appsrc_to_element"
 
   external push_buffer_string : t -> string -> unit = "ocaml_gstreamer_appsrc_push_buffer_string"
+
+  external connect_need_data : t -> (int -> unit) -> unit = "ocaml_gstreamer_appsrc_connect_need_data"
 end
 
 module App_sink = struct

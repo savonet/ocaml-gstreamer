@@ -51,6 +51,8 @@ module App_src = struct
   external push_buffer_string : t -> string -> unit = "ocaml_gstreamer_appsrc_push_buffer_string"
 
   external connect_need_data : t -> (int -> unit) -> unit = "ocaml_gstreamer_appsrc_connect_need_data"
+
+  external end_of_stream : t -> unit = "ocaml_gstreamer_appsrc_end_of_stream"
 end
 
 module App_sink = struct

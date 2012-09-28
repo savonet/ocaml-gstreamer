@@ -307,6 +307,22 @@ CAMLprim value ocaml_gstreamer_appsrc_connect_need_data(value _as, value f)
   CAMLreturn(Val_unit);
 }
 
+CAMLprim value ocaml_gstreamer_appsrc_end_of_stream(value _as)
+{
+  CAMLparam1(_as);
+  appsrc *as = Appsrc_val(_as);
+  GstFlowReturn ret;
+
+  caml_acquire_runtime_system();
+  g_signal_emit_by_name(as->appsrc, "end-of-stream", &ret);
+  caml_release_runtime_system();
+
+  //TODO: raise
+  assert(ret == GST_FLOW_OK);
+
+  CAMLreturn(Val_unit);
+}
+
 /***** Appsink *****/
 
 #define Appsink_val(v) (GST_APP_SINK(Element_val(v)))

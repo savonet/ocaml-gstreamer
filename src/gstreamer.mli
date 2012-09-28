@@ -50,6 +50,8 @@ module App_src : sig
   val push_buffer_string : t -> string -> unit
 
   val connect_need_data : t -> (int -> unit) -> unit
+
+  val end_of_stream : t -> unit
 end
 
 module App_sink : sig

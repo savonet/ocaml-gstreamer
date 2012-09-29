@@ -58,5 +58,9 @@ end
 module App_sink = struct
   type t = Element.t
 
+  let of_element e = e
+
   external pull_buffer : t -> (int, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1.t = "ocaml_gstreamer_appsink_pull_buffer"
+
+  external pull_buffer_string : t -> string = "ocaml_gstreamer_appsink_pull_buffer_string"
 end

@@ -1,8 +1,9 @@
 SOURCES = appsink.ml
 RESULT = appsink
-LIBS = unix bigarray gstreamer
+LIBS = bigarray gstreamer
 CLIBS = camlidl
 INCDIRS = ../../src
+THREADS = yes
 
 all: dnc
 

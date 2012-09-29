@@ -347,3 +347,23 @@ CAMLprim value ocaml_gstreamer_appsink_pull_buffer(value _as)
   value ba = caml_ba_alloc(CAML_BA_MANAGED | CAML_BA_C_LAYOUT | CAML_BA_UINT8, 1, data, &len);
   CAMLreturn(ba);
 }
+
+CAMLprim value ocaml_gstreamer_appsink_pull_buffer_string(value _as)
+{
+  CAMLparam1(_as);
+  GstAppSink *as = Appsink_val(_as);
+  GstBuffer *gstbuf;
+  intnat len;
+
+  caml_release_runtime_system();
+  gstbuf = gst_app_sink_pull_buffer(as);
+  //TODO: raise exception
+  assert(gstbuf);
+  len = gstbuf->size;
+  caml_acquire_runtime_system();
+
+  value ans = caml_alloc_string(len);
+  memcpy(String_val(ans), gstbuf->data, len);
+  gst_buffer_unref(gstbuf);
+  CAMLreturn(ans);
+}

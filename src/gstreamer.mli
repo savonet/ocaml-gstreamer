@@ -57,5 +57,9 @@ end
 module App_sink : sig
   type t = Element.t
 
+  val of_element : Element.t -> t
+
   val pull_buffer : t -> (int, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1.t
+
+  val pull_buffer_string : t -> string
 end

@@ -1,3 +1,5 @@
+exception Error
+
 val init : ?argv:(string array) -> unit -> unit
 
 val version : unit -> int * int * int * int
@@ -26,16 +28,34 @@ module Element : sig
   val set_property_bool : t -> string -> string -> unit
 
   val set_state : t -> state -> state_change
+
+  val link : t -> t -> unit
+
+  val link_many : t list -> unit
+end
+
+module Element_factory : sig
+  type t = Element.t
+
+  val make : string -> string -> t
 end
 
 module Bin : sig
   type t = Element.t
+
+  val of_element : Element.t -> t
+
+  val add : t -> Element.t -> unit
+
+  val add_many : t -> Element.t list -> unit
 
   val get_by_name : t -> string -> Element.t
 end
 
 module Pipeline : sig
   type t = Element.t
+
+  val create : string -> t
 
   val parse_launch : string -> t
 end

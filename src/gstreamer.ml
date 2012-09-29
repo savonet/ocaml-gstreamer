@@ -1,3 +1,8 @@
+exception Error
+
+let () =
+  Callback.register_exception "gstreamer_exn_error" Error
+
 external init : (string array) option -> unit = "ocaml_gstreamer_init"
 let init ?argv () = init argv
 
@@ -27,16 +32,37 @@ module Element = struct
   external set_property_bool : t -> string -> string -> unit = "ocaml_gstreamer_element_set_property_bool"
 
   external set_state : t -> state -> state_change = "ocaml_gstreamer_element_set_state"
+
+  external link : t -> t -> unit = "ocaml_gstreamer_element_link"
+
+  let link_many ee =
+    let e, ee = List.hd ee, List.tl ee in
+    ignore (List.fold_left (fun e e' -> link e e'; e') e ee)
+end
+
+module Element_factory = struct
+  type t = Element.t
+
+  external make : string -> string -> t = "ocaml_gstreamer_element_factory_make"
 end
 
 module Bin = struct
   type t = Element.t
+
+  let of_element e = e
+
+  external add : t -> Element.t -> unit = "ocaml_gstreamer_bin_add"
+
+  let add_many bin e =
+    List.iter (add bin) e
 
   external get_by_name : t -> string -> Element.t = "ocaml_gstreamer_bin_get_by_name"
 end
 
 module Pipeline = struct
   type t = Element.t
+
+  external create : string -> t = "ocaml_gstreamer_pipeline_create"
 
   external parse_launch : string -> t = "ocaml_gstreamer_pipeline_parse_launch"
 end

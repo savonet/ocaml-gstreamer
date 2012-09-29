@@ -41,6 +41,7 @@ INCDIRS = @INC@
 NO_CUSTOM = yes
 OCAMLFLAGS = @OCAMLFLAGS@
 CAMLIDLFLAGS = -no-include
+ANNOTATE = true
 
 all: $(OCAMLBEST)
 

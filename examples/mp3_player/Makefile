@@ -1,8 +1,8 @@
 SOURCES = player.ml
 RESULT = player
-LIBS = unix bigarray gstreamer
-CLIBS = camlidl
+LIBS = bigarray gstreamer
 INCDIRS = ../../src
+THREADS = yes
 
 all: dnc
 

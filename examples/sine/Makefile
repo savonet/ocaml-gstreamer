@@ -1,8 +1,8 @@
 SOURCES = sine.ml
 RESULT = sine
-LIBS = unix bigarray gstreamer
-CLIBS = camlidl
+LIBS = bigarray gstreamer
 INCDIRS = ../../src
+THREADS = yes
 
 all: dnc
 

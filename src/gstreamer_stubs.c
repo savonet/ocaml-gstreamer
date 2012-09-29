@@ -78,6 +78,7 @@ static struct custom_operations element_ops =
 
 static value value_of_element(GstElement *e)
 {
+  if (!e) caml_raise_constant(*caml_named_value("gstreamer_exn_error"));
   value ans = caml_alloc_custom(&element_ops, sizeof(GstElement*), 0, 1);
   Element_val(ans) = e;
   return ans;
@@ -157,14 +158,61 @@ CAMLprim value ocaml_gstreamer_element_set_state(value _e, value _s)
   GstState s = state_of_val(_s);
   GstStateChangeReturn ret;
 
+  caml_release_runtime_system();
   ret = gst_element_set_state(e, s);
+  caml_acquire_runtime_system();
 
   CAMLreturn(value_of_state_change_return(ret));
+}
+
+CAMLprim value ocaml_gstreamer_element_link(value _src, value _dst)
+{
+  CAMLparam2(_src, _dst);
+  GstElement *src = Element_val(_src);
+  GstElement *dst = Element_val(_dst);
+  gboolean ret;
+
+  caml_release_runtime_system();
+  ret = gst_element_link(src, dst);
+  caml_acquire_runtime_system();
+
+  assert(ret);
+  CAMLreturn(Val_unit);
+}
+
+/***** Element factory *****/
+
+CAMLprim value ocaml_gstreamer_element_factory_make(value factname, value name)
+{
+  CAMLparam2(factname, name);
+  CAMLlocal1(ans);
+  GstElement *e;
+
+  e = gst_element_factory_make(String_val(factname), String_val(name));
+  ans = value_of_element(e);
+
+  CAMLreturn(ans);
 }
 
 /***** Bin ******/
 
 #define Bin_val(v) GST_BIN(Element_val(v))
+
+CAMLprim value ocaml_gstreamer_bin_add(value _bin, value _e)
+{
+  CAMLparam2(_bin, _e);
+  GstBin *bin = Bin_val(_bin);
+  GstElement *e = Element_val(_e);
+  gboolean ret;
+
+  caml_release_runtime_system();
+  ret = gst_bin_add(bin, e);
+  caml_acquire_runtime_system();
+
+  assert(ret);
+
+  CAMLreturn(Val_unit);
+}
 
 CAMLprim value ocaml_gstreamer_bin_get_by_name(value _bin, value _name)
 {
@@ -179,6 +227,18 @@ CAMLprim value ocaml_gstreamer_bin_get_by_name(value _bin, value _name)
 }
 
 /***** Pipeline *****/
+
+CAMLprim value ocaml_gstreamer_pipeline_create(value s)
+{
+  CAMLparam1(s);
+  CAMLlocal1(ans);
+  GstElement *e;
+
+  e = gst_pipeline_new(String_val(s));
+
+  ans = value_of_element(e);
+  CAMLreturn(ans);
+}
 
 CAMLprim value ocaml_gstreamer_pipeline_parse_launch(value s)
 {

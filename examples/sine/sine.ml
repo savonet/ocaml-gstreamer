@@ -7,4 +7,5 @@ let () =
     ignore (Element.set_state bin State_playing);
     Unix.sleep 5;
     ignore (Element.set_state bin State_null);
+    Gstreamer.deinit ();
     Gc.full_major ()

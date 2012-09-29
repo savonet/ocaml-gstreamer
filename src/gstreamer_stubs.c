@@ -31,8 +31,8 @@ CAMLprim value ocaml_gstreamer_init(value _argv)
       for(i = 0; i < argc; i++)
         {
           len = caml_string_length(Field(_argv,i));
-          argv[i] = malloc(len);
-          memcpy(argv[i], String_val(Field(_argv,i)), len);
+          argv[i] = malloc(len+1);
+          memcpy(argv[i], String_val(Field(_argv,i)), len+1);
         }
     }
 
@@ -361,7 +361,7 @@ CAMLprim value ocaml_gstreamer_appsrc_push_buffer_string(value _as, value _buf)
   GstBuffer *gstbuf = gst_buffer_new_and_alloc(buflen);
   GstFlowReturn ret;
 
-  memcpy(GST_BUFFER_DATA(gstbuf), String_val(_buf), buflen);
+  gst_buffer_set_data(gstbuf, (unsigned char*)String_val(_buf), buflen);
 
   caml_release_runtime_system();
   ret = gst_app_src_push_buffer(as->appsrc, gstbuf);

@@ -19,16 +19,40 @@
 CAMLprim value ocaml_gstreamer_init(value _argv)
 {
   CAMLparam1(_argv);
-
   char **argv = NULL;
   int argc = 0;
+  int len, i;
+
   if (Is_block(_argv))
     {
-      //argc = Wosize_val(_argv);
-      /* TODO */
+      _argv = Field(_argv, 0);
+      argc = Wosize_val(_argv);
+      argv = malloc(argc*sizeof(char*));
+      for(i = 0; i < argc; i++)
+        {
+          len = caml_string_length(Field(_argv,i));
+          argv[i] = malloc(len);
+          memcpy(argv[i], String_val(Field(_argv,i)), len);
+        }
     }
+
+  caml_release_runtime_system();
   gst_init(&argc, &argv);
+  for(i = 0; i < argc; i++)
+    free(argv[i]);
   free(argv);
+  caml_acquire_runtime_system();
+
+  CAMLreturn(Val_unit);
+}
+
+CAMLprim value ocaml_gstreamer_deinit(value unit)
+{
+  CAMLparam0();
+
+  caml_release_runtime_system();
+  gst_deinit();
+  caml_acquire_runtime_system();
 
   CAMLreturn(Val_unit);
 }
@@ -206,6 +230,9 @@ CAMLprim value ocaml_gstreamer_bin_add(value _bin, value _e)
   gboolean ret;
 
   caml_release_runtime_system();
+  /* TODO: we have to ref here and have the bin unref it children at finalize!
+     Namely, the bin should not have references to deallocated childs. */
+  //gst_object_ref(e);
   ret = gst_bin_add(bin, e);
   caml_acquire_runtime_system();
 
@@ -244,9 +271,9 @@ CAMLprim value ocaml_gstreamer_pipeline_parse_launch(value s)
 {
   CAMLparam1(s);
   CAMLlocal1(ans);
-
   GError *err = NULL;
   GstElement *e;
+
   e = gst_parse_launch(String_val(s), &err);
   if (err != NULL)
     {
@@ -335,9 +362,11 @@ CAMLprim value ocaml_gstreamer_appsrc_push_buffer_string(value _as, value _buf)
   GstFlowReturn ret;
 
   memcpy(GST_BUFFER_DATA(gstbuf), String_val(_buf), buflen);
+
   caml_release_runtime_system();
   ret = gst_app_src_push_buffer(as->appsrc, gstbuf);
   caml_acquire_runtime_system();
+
   //TODO: raise
   assert(ret == GST_FLOW_OK);
 
@@ -347,6 +376,7 @@ CAMLprim value ocaml_gstreamer_appsrc_push_buffer_string(value _as, value _buf)
 static void appsrc_need_data_cb(GstAppSrc *gas, guint length, gpointer user_data)
 {
   appsrc *as = (appsrc*)user_data;
+
   caml_c_thread_register();
   caml_acquire_runtime_system();
   caml_callback(as->need_data_cb, Val_int(length));
@@ -359,9 +389,14 @@ CAMLprim value ocaml_gstreamer_appsrc_connect_need_data(value _as, value f)
   CAMLparam2(_as, f);
   appsrc *as = Appsrc_val(_as);
   disconnect_need_data(as);
+
   caml_register_global_root(&as->need_data_cb);
+
+  caml_release_runtime_system();
   as->need_data_cb = f;
   as->need_data_hid = g_signal_connect(as->appsrc, "need-data", G_CALLBACK(appsrc_need_data_cb), as);
+  caml_acquire_runtime_system();
+
   assert(as->need_data_hid);
   CAMLreturn(Val_unit);
 }
@@ -389,23 +424,23 @@ CAMLprim value ocaml_gstreamer_appsrc_end_of_stream(value _as)
 CAMLprim value ocaml_gstreamer_appsink_pull_buffer(value _as)
 {
   CAMLparam1(_as);
+  CAMLlocal1(ans);
   GstAppSink *as = Appsink_val(_as);
   GstBuffer *gstbuf;
-  char *data;
   intnat len;
 
   caml_release_runtime_system();
   gstbuf = gst_app_sink_pull_buffer(as);
-  //TODO: raise exception
-  assert(gstbuf);
-  len = gstbuf->size;
-  data = malloc(len);
-  memcpy(data, gstbuf->data, len);
-  gst_buffer_unref(gstbuf);
   caml_acquire_runtime_system();
 
-  value ba = caml_ba_alloc(CAML_BA_MANAGED | CAML_BA_C_LAYOUT | CAML_BA_UINT8, 1, data, &len);
-  CAMLreturn(ba);
+  if (!gstbuf)
+    caml_raise_constant(*caml_named_value("gstreamer_exn_error"));
+  len = gstbuf->size;
+  ans = caml_ba_alloc(CAML_BA_C_LAYOUT | CAML_BA_UINT8, 1, NULL, &len);
+  memcpy(Caml_ba_data_val(ans), gstbuf->data, len);
+  gst_buffer_unref(gstbuf);
+
+  CAMLreturn(ans);
 }
 
 CAMLprim value ocaml_gstreamer_appsink_pull_buffer_string(value _as)
@@ -417,13 +452,26 @@ CAMLprim value ocaml_gstreamer_appsink_pull_buffer_string(value _as)
 
   caml_release_runtime_system();
   gstbuf = gst_app_sink_pull_buffer(as);
-  //TODO: raise exception
-  assert(gstbuf);
-  len = gstbuf->size;
   caml_acquire_runtime_system();
 
+  if (!gstbuf)
+    caml_raise_constant(*caml_named_value("gstreamer_exn_error"));
+  len = gstbuf->size;
   value ans = caml_alloc_string(len);
   memcpy(String_val(ans), gstbuf->data, len);
   gst_buffer_unref(gstbuf);
   CAMLreturn(ans);
+}
+
+CAMLprim value ocaml_gstreamer_appsink_is_eos(value _as)
+{
+  CAMLparam1(_as);
+  GstAppSink *as = Appsink_val(_as);
+  gboolean ret;
+
+  caml_release_runtime_system();
+  ret = gst_app_sink_is_eos(as);
+  caml_acquire_runtime_system();
+
+  CAMLreturn(Val_bool(ret));
 }

@@ -1,6 +1,9 @@
 exception Error
+exception End_of_stream
 
 val init : ?argv:(string array) -> unit -> unit
+
+val deinit : unit -> unit
 
 val version : unit -> int * int * int * int
 
@@ -82,4 +85,6 @@ module App_sink : sig
   val pull_buffer : t -> (int, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1.t
 
   val pull_buffer_string : t -> string
+
+  val is_eos : t -> bool
 end

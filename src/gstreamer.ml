@@ -1,10 +1,14 @@
 exception Error
+exception End_of_stream
 
 let () =
-  Callback.register_exception "gstreamer_exn_error" Error
+  Callback.register_exception "gstreamer_exn_error" Error;
+  Callback.register_exception "gstreamer_exn_eos" End_of_stream
 
 external init : (string array) option -> unit = "ocaml_gstreamer_init"
 let init ?argv () = init argv
+
+external deinit : unit -> unit = "ocaml_gstreamer_deinit"
 
 external version : unit -> int * int * int * int = "ocaml_gstreamer_version"
 
@@ -89,4 +93,6 @@ module App_sink = struct
   external pull_buffer : t -> (int, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1.t = "ocaml_gstreamer_appsink_pull_buffer"
 
   external pull_buffer_string : t -> string = "ocaml_gstreamer_appsink_pull_buffer_string"
+
+  external is_eos : t -> bool = "ocaml_gstreamer_appsink_is_eos"
 end

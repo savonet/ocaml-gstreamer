@@ -16,6 +16,8 @@ type state =
 | State_paused
 | State_playing
 
+val string_of_state : state -> string
+
 type state_change =
 | State_change_sucess
 | State_change_async
@@ -31,6 +33,8 @@ module Element : sig
   val set_property_bool : t -> string -> string -> unit
 
   val set_state : t -> state -> state_change
+
+  val get_state : t -> state_change * state * state
 
   val link : t -> t -> unit
 

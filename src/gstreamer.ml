@@ -21,6 +21,13 @@ type state =
 | State_paused
 | State_playing
 
+let string_of_state = function
+  | State_void_pending -> "no pending state"
+  | State_null -> "null state"
+  | State_ready -> "ready to go to paused"
+  | State_paused -> "paused"
+  | State_playing -> "playing"
+
 type state_change =
 | State_change_sucess
 | State_change_async
@@ -36,6 +43,8 @@ module Element = struct
   external set_property_bool : t -> string -> string -> unit = "ocaml_gstreamer_element_set_property_bool"
 
   external set_state : t -> state -> state_change = "ocaml_gstreamer_element_set_state"
+
+  external get_state : t -> state_change * state * state = "ocaml_gstreamer_element_get_state"
 
   external link : t -> t -> unit = "ocaml_gstreamer_element_link"
 

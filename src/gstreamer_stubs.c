@@ -189,6 +189,26 @@ CAMLprim value ocaml_gstreamer_element_set_state(value _e, value _s)
   CAMLreturn(value_of_state_change_return(ret));
 }
 
+CAMLprim value ocaml_gstreamer_element_get_state(value _e)
+{
+  CAMLparam1(_e);
+  CAMLlocal1(ans);
+  GstElement *e = Element_val(_e);
+  GstStateChangeReturn ret;
+  GstState state, pending;
+  GstClockTime timeout = GST_CLOCK_TIME_NONE; /* TODO */
+
+  caml_release_runtime_system();
+  ret = gst_element_get_state(e, &state, &pending, timeout);
+  caml_acquire_runtime_system();
+
+  ans = caml_alloc_tuple(3);
+  Store_field(ans, 0, value_of_state_change_return(ret));
+  Store_field(ans, 1, state_of_val(state));
+  Store_field(ans, 2, state_of_val(pending));
+  CAMLreturn(ans);
+}
+
 CAMLprim value ocaml_gstreamer_element_link(value _src, value _dst)
 {
   CAMLparam2(_src, _dst);

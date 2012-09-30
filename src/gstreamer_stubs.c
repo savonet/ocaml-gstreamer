@@ -392,7 +392,7 @@ CAMLprim value ocaml_gstreamer_appsrc_push_buffer_string(value _as, value _buf)
   memcpy(map.data, (unsigned char*)String_val(_buf), buflen);
 
   caml_release_runtime_system();
-  gst_buffer_unmap (gstbuf, &map);
+  gst_buffer_unmap(gstbuf, &map);
   ret = gst_app_src_push_buffer(as->appsrc, gstbuf);
   caml_acquire_runtime_system();
 
@@ -550,8 +550,10 @@ CAMLprim value ocaml_gstreamer_appsink_pull_buffer(value _as)
   ans = caml_ba_alloc(CAML_BA_C_LAYOUT | CAML_BA_UINT8, 1, NULL, &len);
   memcpy(Caml_ba_data_val(ans), map.data, len);
 
-  gst_buffer_unref(gstbuf);
+  caml_release_runtime_system();
+  gst_buffer_unmap(gstbuf, &map);
   gst_sample_unref(gstsample);
+  caml_acquire_runtime_system();
 
   CAMLreturn(ans);
 }

@@ -378,12 +378,21 @@ CAMLprim value ocaml_gstreamer_appsrc_push_buffer_string(value _as, value _buf)
   CAMLparam2(_as, _buf);
   int buflen = caml_string_length(_buf);
   appsrc *as = Appsrc_val(_as);
-  GstBuffer *gstbuf = gst_buffer_new_and_alloc(buflen);
+  GstBuffer *gstbuf;
+  GstMapInfo map;
   GstFlowReturn ret;
-
-  gst_buffer_set_data(gstbuf, (unsigned char*)String_val(_buf), buflen);
+  gboolean bret;
 
   caml_release_runtime_system();
+  gstbuf = gst_buffer_new_and_alloc(buflen);
+  bret = gst_buffer_map (gstbuf, &map, GST_MAP_WRITE);
+  caml_acquire_runtime_system();
+
+  assert(bret);
+  memcpy(map.data, (unsigned char*)String_val(_buf), buflen);
+
+  caml_release_runtime_system();
+  gst_buffer_unmap (gstbuf, &map);
   ret = gst_app_src_push_buffer(as->appsrc, gstbuf);
   caml_acquire_runtime_system();
 
@@ -439,59 +448,168 @@ CAMLprim value ocaml_gstreamer_appsrc_end_of_stream(value _as)
 
 /***** Appsink *****/
 
-#define Appsink_val(v) (GST_APP_SINK(Element_val(v)))
+typedef struct {
+  GstAppSink *appsink;
+  value new_buffer_cb; // Callback function
+  gulong new_buffer_hid; // Callback handler ID
+} appsink;
+
+#define Appsink_val(v) (*(appsink**)Data_custom_val(v))
+
+static void disconnect_new_buffer(appsink *as)
+{
+  if(as->new_buffer_cb)
+    {
+      caml_remove_global_root(&as->new_buffer_cb);
+      as->new_buffer_cb = 0;
+    }
+  if(as->new_buffer_hid)
+    {
+      g_signal_handler_disconnect(as->appsink, as->new_buffer_hid);
+      as->new_buffer_hid = 0;
+    }
+}
+
+static void finalize_appsink(value v)
+{
+  appsink *as = Appsink_val(v);
+  disconnect_new_buffer(as);
+  free(as);
+}
+
+static struct custom_operations appsink_ops =
+  {
+    "ocaml_gstreamer_appsink",
+    finalize_appsink,
+    custom_compare_default,
+    custom_hash_default,
+    custom_serialize_default,
+    custom_deserialize_default
+  };
+
+static value value_of_appsink(GstAppSink *e)
+{
+  value ans = caml_alloc_custom(&appsink_ops, sizeof(GstAppSink*), 0, 1);
+  appsink *as = malloc(sizeof(appsink));
+  as->appsink = e;
+  as->new_buffer_cb = 0;
+  as->new_buffer_hid = 0;
+  Appsink_val(ans) = as;
+  return ans;
+}
+
+CAMLprim value ocaml_gstreamer_appsink_of_element(value _e)
+{
+  CAMLparam1(_e);
+  GstElement *e = Element_val(_e);
+  CAMLreturn(value_of_appsink(GST_APP_SINK(e)));
+}
+
+CAMLprim value ocaml_gstreamer_appsink_emit_signals(value _as)
+{
+  CAMLparam0();
+  appsink *as = Appsink_val(_as);
+
+  caml_release_runtime_system();
+  gst_app_sink_set_emit_signals(as->appsink, TRUE);
+  caml_acquire_runtime_system();
+
+  CAMLreturn(Val_unit);
+}
 
 CAMLprim value ocaml_gstreamer_appsink_pull_buffer(value _as)
 {
   CAMLparam1(_as);
   CAMLlocal1(ans);
-  GstAppSink *as = Appsink_val(_as);
+  appsink *as = Appsink_val(_as);
+  GstSample *gstsample;
   GstBuffer *gstbuf;
+  GstMapInfo map;
   intnat len;
+  gboolean ret;
 
   caml_release_runtime_system();
-  gstbuf = gst_app_sink_pull_buffer(as);
+  gstsample = gst_app_sink_pull_sample(as->appsink);
   caml_acquire_runtime_system();
 
-  if (!gstbuf)
-    caml_raise_constant(*caml_named_value("gstreamer_exn_error"));
-  len = gstbuf->size;
+  if (!gstsample) caml_raise_constant(*caml_named_value("gstreamer_exn_error"));
+
+  caml_release_runtime_system();
+  gstbuf = gst_sample_get_buffer(gstsample);
+  caml_acquire_runtime_system();
+
+  assert(gstbuf);
+
+  caml_release_runtime_system();
+  ret = gst_buffer_map(gstbuf, &map, GST_MAP_READ);
+  caml_acquire_runtime_system();
+
+  assert(ret);
+
+  len = map.size;
   ans = caml_ba_alloc(CAML_BA_C_LAYOUT | CAML_BA_UINT8, 1, NULL, &len);
-  memcpy(Caml_ba_data_val(ans), gstbuf->data, len);
+  memcpy(Caml_ba_data_val(ans), map.data, len);
+
   gst_buffer_unref(gstbuf);
+  gst_sample_unref(gstsample);
 
   CAMLreturn(ans);
 }
 
+/* TODO: optimized version? */
 CAMLprim value ocaml_gstreamer_appsink_pull_buffer_string(value _as)
 {
   CAMLparam1(_as);
-  GstAppSink *as = Appsink_val(_as);
-  GstBuffer *gstbuf;
-  intnat len;
+  CAMLlocal2(ba,ans);
+  int len;
 
-  caml_release_runtime_system();
-  gstbuf = gst_app_sink_pull_buffer(as);
-  caml_acquire_runtime_system();
+  ba = ocaml_gstreamer_appsink_pull_buffer(_as);
+  len = Caml_ba_array_val(ba)->dim[0];
+  ans = caml_alloc_string(len);
+  memcpy(String_val(ans), Caml_ba_data_val(ba), len);
 
-  if (!gstbuf)
-    caml_raise_constant(*caml_named_value("gstreamer_exn_error"));
-  len = gstbuf->size;
-  value ans = caml_alloc_string(len);
-  memcpy(String_val(ans), gstbuf->data, len);
-  gst_buffer_unref(gstbuf);
   CAMLreturn(ans);
 }
 
 CAMLprim value ocaml_gstreamer_appsink_is_eos(value _as)
 {
   CAMLparam1(_as);
-  GstAppSink *as = Appsink_val(_as);
+  appsink *as = Appsink_val(_as);
   gboolean ret;
 
   caml_release_runtime_system();
-  ret = gst_app_sink_is_eos(as);
+  ret = gst_app_sink_is_eos(as->appsink);
   caml_acquire_runtime_system();
 
   CAMLreturn(Val_bool(ret));
+}
+
+static GstFlowReturn appsink_new_buffer_cb(GstAppSink *gas, gpointer user_data)
+{
+  appsink *as = (appsink*)user_data;
+
+  caml_c_thread_register();
+  caml_acquire_runtime_system();
+  caml_callback(as->new_buffer_cb, Val_unit);
+  caml_release_runtime_system();
+  caml_c_thread_unregister();
+
+  return GST_FLOW_OK;
+}
+
+CAMLprim value ocaml_gstreamer_appsink_connect_new_buffer(value _as, value f)
+{
+  CAMLparam2(_as, f);
+  appsink *as = Appsink_val(_as);
+  disconnect_new_buffer(as);
+
+  caml_register_global_root(&as->new_buffer_cb);
+
+  caml_release_runtime_system();
+  as->new_buffer_cb = f;
+  as->new_buffer_hid = g_signal_connect(as->appsink, "new-buffer", G_CALLBACK(appsink_new_buffer_cb), as);
+  caml_acquire_runtime_system();
+
+  assert(as->new_buffer_hid);
+  CAMLreturn(Val_unit);
 }

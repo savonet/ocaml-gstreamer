@@ -1,5 +1,3 @@
-
-# check for one particular file of the sources 
 AC_INIT([ocaml-gstreamer],[0.2.0],[savonet-users@lists.sourceforge.net])
 
 VERSION=$PACKAGE_VERSION
@@ -12,8 +10,8 @@ if test "$CAMLIDL" = no ; then
 fi
 
 PKG_PROG_PKG_CONFIG()
-PKG_CONFIG_CHECK_MODULE([gstreamer-0.10])
-PKG_CONFIG_CHECK_MODULE([gstreamer-app-0.10])
+PKG_CONFIG_CHECK_MODULE([gstreamer-1.0])
+PKG_CONFIG_CHECK_MODULE([gstreamer-app-1.0])
 
 # This module requires camlidl.
 requires=camlidl

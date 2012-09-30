@@ -76,13 +76,13 @@ module App_src : sig
 
   val push_buffer_string : t -> string -> unit
 
-  val connect_need_data : t -> (int -> unit) -> unit
+  val on_need_data : t -> (int -> unit) -> unit
 
   val end_of_stream : t -> unit
 end
 
 module App_sink : sig
-  type t = Element.t
+  type t
 
   val of_element : Element.t -> t
 
@@ -90,5 +90,9 @@ module App_sink : sig
 
   val pull_buffer_string : t -> string
 
+  val emit_signals : t -> unit
+
   val is_eos : t -> bool
+
+  val on_new_buffer : t -> (unit -> unit) -> unit
 end

@@ -89,19 +89,23 @@ module App_src = struct
 
   external push_buffer_string : t -> string -> unit = "ocaml_gstreamer_appsrc_push_buffer_string"
 
-  external connect_need_data : t -> (int -> unit) -> unit = "ocaml_gstreamer_appsrc_connect_need_data"
+  external on_need_data : t -> (int -> unit) -> unit = "ocaml_gstreamer_appsrc_connect_need_data"
 
   external end_of_stream : t -> unit = "ocaml_gstreamer_appsrc_end_of_stream"
 end
 
 module App_sink = struct
-  type t = Element.t
+  type t
 
-  let of_element e = e
+  external of_element : Element.t -> t = "ocaml_gstreamer_appsink_of_element"
 
   external pull_buffer : t -> (int, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1.t = "ocaml_gstreamer_appsink_pull_buffer"
 
   external pull_buffer_string : t -> string = "ocaml_gstreamer_appsink_pull_buffer_string"
 
+  external emit_signals : t -> unit = "ocaml_gstreamer_appsink_emit_signals"
+
   external is_eos : t -> bool = "ocaml_gstreamer_appsink_is_eos"
+
+  external on_new_buffer : t -> (unit -> unit) -> unit = "ocaml_gstreamer_appsink_connect_new_buffer"
 end

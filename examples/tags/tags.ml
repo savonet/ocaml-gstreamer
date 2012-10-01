@@ -5,7 +5,7 @@ let () =
   let pipeline = Printf.sprintf "filesrc location=\"%s\" ! decodebin ! fakesink" Sys.argv.(1) in
   let bin = Pipeline.parse_launch pipeline in
   (* Go in paused state. *)
-  ignore (Element.set_state bin State_paused);
+  ignore (Element.set_state bin Element.State_paused);
   (* Wait for the state to complete. *)
   ignore (Element.get_state bin);
   try

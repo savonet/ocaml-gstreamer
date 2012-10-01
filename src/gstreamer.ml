@@ -14,24 +14,6 @@ external version : unit -> int * int * int * int = "ocaml_gstreamer_version"
 
 external version_string : unit -> string = "ocaml_gstreamer_version_string"
 
-type state =
-| State_void_pending
-| State_null
-| State_ready
-| State_paused
-| State_playing
-
-let string_of_state = function
-  | State_void_pending -> "no pending state"
-  | State_null -> "null state"
-  | State_ready -> "ready to go to paused"
-  | State_paused -> "paused"
-  | State_playing -> "playing"
-
-type state_change =
-| State_change_sucess
-| State_change_async
-| State_change_no_preroll
 
 module Element = struct
   type t
@@ -41,6 +23,20 @@ module Element = struct
   external set_property_int : t -> string -> string -> unit = "ocaml_gstreamer_element_set_property_int"
 
   external set_property_bool : t -> string -> string -> unit = "ocaml_gstreamer_element_set_property_bool"
+
+  type state =
+  | State_void_pending
+  | State_null
+  | State_ready
+  | State_paused
+  | State_playing
+
+  external string_of_state : state -> string = "ocaml_gstreamer_element_string_of_state"
+
+  type state_change =
+  | State_change_sucess
+  | State_change_async
+  | State_change_no_preroll
 
   external set_state : t -> state -> state_change = "ocaml_gstreamer_element_set_state"
 

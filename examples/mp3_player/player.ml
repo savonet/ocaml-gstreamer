@@ -12,8 +12,8 @@ let () =
   let audiosink = Element_factory.make "pulsesink" "play_audio" in
     Bin.add_many (Bin.of_element bin) [filesrc; decoder; conv; resample; audiosink];
     Element.link_many [filesrc; decoder; conv; resample; audiosink];
-    ignore (Element.set_state bin State_playing);
+    ignore (Element.set_state bin Element.State_playing);
     Unix.sleep 5;
-    ignore (Element.set_state bin State_null);
+    ignore (Element.set_state bin Element.State_null);
     Gstreamer.deinit ();
     Gc.full_major ()

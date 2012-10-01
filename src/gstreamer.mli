@@ -9,20 +9,6 @@ val version : unit -> int * int * int * int
 
 val version_string : unit -> string
 
-type state =
-| State_void_pending
-| State_null
-| State_ready
-| State_paused
-| State_playing
-
-val string_of_state : state -> string
-
-type state_change =
-| State_change_sucess
-| State_change_async
-| State_change_no_preroll
-
 module Element : sig
   type t
 
@@ -31,6 +17,20 @@ module Element : sig
   val set_property_int : t -> string -> string -> unit
 
   val set_property_bool : t -> string -> string -> unit
+
+  type state =
+  | State_void_pending
+  | State_null
+  | State_ready
+  | State_paused
+  | State_playing
+
+  val string_of_state : state -> string
+
+  type state_change =
+  | State_change_sucess
+  | State_change_async
+  | State_change_no_preroll
 
   val set_state : t -> state -> state_change
 

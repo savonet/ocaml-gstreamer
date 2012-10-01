@@ -131,28 +131,23 @@ CAMLprim value ocaml_gstreamer_element_set_property_bool(value e, value l, value
   CAMLreturn(Val_unit);
 }
 
+#define states_len 5
+static const GstState states[states_len] = { GST_STATE_VOID_PENDING, GST_STATE_NULL, GST_STATE_READY, GST_STATE_PAUSED, GST_STATE_PLAYING };
+
 static GstState state_of_val(value v)
 {
-  switch(Int_val(v))
-    {
-    case 0:
-      return GST_STATE_VOID_PENDING;
+  int n = Int_val(v);
+  assert (n < states_len);
+  return states[n];
+}
 
-    case 1:
-      return GST_STATE_NULL;
-
-    case 2:
-      return GST_STATE_READY;
-
-    case 3:
-      return GST_STATE_PAUSED;
-
-    case 4:
-      return GST_STATE_PLAYING;
-
-    default:
-      assert(0);
-    }
+static value val_of_state(GstState state)
+{
+  int i;
+  for(i = 0; i < states_len; i++)
+    if (state == states[i])
+      return i;
+  assert(0);
 }
 
 static value value_of_state_change_return(GstStateChangeReturn ret)
@@ -175,6 +170,12 @@ static value value_of_state_change_return(GstStateChangeReturn ret)
     default:
       assert(0);
     }
+}
+
+CAMLprim value ocaml_gstreamer_element_string_of_state(value state)
+{
+  CAMLparam1(state);
+  CAMLreturn(caml_copy_string(gst_element_state_get_name(state_of_val(state))));
 }
 
 CAMLprim value ocaml_gstreamer_element_set_state(value _e, value _s)
@@ -206,8 +207,8 @@ CAMLprim value ocaml_gstreamer_element_get_state(value _e)
 
   ans = caml_alloc_tuple(3);
   Store_field(ans, 0, value_of_state_change_return(ret));
-  Store_field(ans, 1, state_of_val(state));
-  Store_field(ans, 2, state_of_val(pending));
+  Store_field(ans, 1, val_of_state(state));
+  Store_field(ans, 2, val_of_state(pending));
   CAMLreturn(ans);
 }
 

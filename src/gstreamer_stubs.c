@@ -14,6 +14,7 @@
 
 #include <gst/gst.h>
 #include <gst/gstclock.h>
+#include <gst/gsttypefind.h>
 #include <gst/app/gstappsrc.h>
 #include <gst/app/gstappsink.h>
 
@@ -567,7 +568,7 @@ static struct custom_operations appsrc_ops =
 
 static value value_of_appsrc(GstAppSrc *e)
 {
-  value ans = caml_alloc_custom(&appsrc_ops, sizeof(GstAppSrc*), 0, 1);
+  value ans = caml_alloc_custom(&appsrc_ops, sizeof(appsrc*), 0, 1);
   appsrc *as = malloc(sizeof(appsrc));
   as->appsrc = e;
   as->need_data_cb = 0;
@@ -706,7 +707,7 @@ static struct custom_operations appsink_ops =
 
 static value value_of_appsink(GstAppSink *e)
 {
-  value ans = caml_alloc_custom(&appsink_ops, sizeof(GstAppSink*), 0, 1);
+  value ans = caml_alloc_custom(&appsink_ops, sizeof(appsink*), 0, 1);
   appsink *as = malloc(sizeof(appsink));
   as->appsink = e;
   as->new_buffer_cb = 0;
@@ -849,5 +850,96 @@ CAMLprim value ocaml_gstreamer_appsink_set_max_buffers(value _as, value _n)
   gst_app_sink_set_max_buffers(as->appsink, n);
   caml_acquire_runtime_system();
 
+  CAMLreturn(Val_unit);
+}
+
+/***** Typefind *****/
+
+typedef struct {
+  GstTypeFind *tf;
+  value have_type_cb; // Callback function
+  gulong have_type_hid; // Callback handler ID
+} typefind;
+
+#define Typefind_data_val(v) (*(typefind**)Data_custom_val(v))
+#define Typefind_val(v) (Typefind_data_val(v)->tf)
+
+static void disconnect_have_type(typefind *tf)
+{
+  if(tf->have_type_cb)
+    {
+      caml_remove_global_root(&tf->have_type_cb);
+      tf->have_type_cb = 0;
+    }
+  if(tf->have_type_hid)
+    {
+      g_signal_handler_disconnect(tf->tf, tf->have_type_hid);
+      tf->have_type_hid = 0;
+    }
+}
+
+static void finalize_typefind(value v)
+{
+  typefind *tf = Typefind_data_val(v);
+  disconnect_have_type(tf);
+  free(tf);
+}
+
+static struct custom_operations typefind_ops =
+  {
+    "ocaml_gstreamer_typefind",
+    finalize_typefind,
+    custom_compare_default,
+    custom_hash_default,
+    custom_serialize_default,
+    custom_deserialize_default
+  };
+
+static value value_of_typefind(GstTypeFind *e)
+{
+  value ans = caml_alloc_custom(&typefind_ops, sizeof(typefind*), 0, 1);
+  typefind *tf = malloc(sizeof(typefind));
+  tf->tf = e;
+  tf->have_type_cb = 0;
+  tf->have_type_hid = 0;
+  Typefind_data_val(ans) = tf;
+  return ans;
+}
+
+#define GST_TYPE_FIND(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_TYPE_FIND,GstTypeFind))
+
+CAMLprim value ocaml_gstreamer_typefind_of_element(value _e)
+{
+  CAMLparam1(_e);
+  GstElement *e = Element_val(_e);
+  CAMLreturn(value_of_typefind(GST_TYPE_FIND(e)));
+}
+
+static void typefind_have_type_cb(GstTypeFind *_typefind, guint probability, GstCaps *caps, gpointer user_data)
+{
+  typefind *tf = (typefind*)user_data;
+
+  caml_c_thread_register();
+  caml_acquire_runtime_system();
+  //TODO: arguments: proba and caps!
+  caml_callback(tf->have_type_cb, Val_unit);
+  caml_release_runtime_system();
+  caml_c_thread_unregister();
+}
+
+CAMLprim value ocaml_gstreamer_typefind_connect_have_type(value _tf, value f)
+{
+  CAMLparam2(_tf, f);
+  typefind *tf = Typefind_data_val(_tf);
+  disconnect_have_type(tf);
+
+  caml_register_global_root(&tf->have_type_cb);
+
+  caml_release_runtime_system();
+  tf->have_type_cb = f;
+  tf->have_type_hid = g_signal_connect(tf->tf, "have-type", G_CALLBACK(typefind_have_type_cb), tf);
+  caml_acquire_runtime_system();
+
+  assert(tf->have_type_hid);
   CAMLreturn(Val_unit);
 }

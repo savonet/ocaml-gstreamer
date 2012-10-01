@@ -147,3 +147,9 @@ module App_sink = struct
 
   external set_max_buffers : t -> int -> unit = "ocaml_gstreamer_appsink_set_max_buffers"
 end
+
+module Type_find = struct
+  type t
+
+  external of_element : Element.t -> t = "ocaml_gstreamer_typefind_of_element"
+end

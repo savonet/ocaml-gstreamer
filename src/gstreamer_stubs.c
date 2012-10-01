@@ -532,7 +532,13 @@ CAMLprim value ocaml_gstreamer_appsink_pull_buffer(value _as)
   gstsample = gst_app_sink_pull_sample(as->appsink);
   caml_acquire_runtime_system();
 
-  if (!gstsample) caml_raise_constant(*caml_named_value("gstreamer_exn_error"));
+  if (!gstsample)
+    {
+      if (gst_app_sink_is_eos(as->appsink))
+        caml_raise_constant(*caml_named_value("gstreamer_exn_eos"));
+      else
+        caml_raise_constant(*caml_named_value("gstreamer_exn_error"));
+    }
 
   caml_release_runtime_system();
   gstbuf = gst_sample_get_buffer(gstsample);

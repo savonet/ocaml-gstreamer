@@ -355,11 +355,19 @@ CAMLprim value ocaml_gstreamer_message_parse_tag(value _msg)
 
 /**** Bus ****/
 
-#define Bus_val(v) (*(GstBus**)Data_custom_val(v))
+typedef struct {
+  GstBus *bus;
+  value element;
+} bus_t;
+
+#define Bus_data_val(v) (*(bus_t**)Data_custom_val(v))
+#define Bus_val(v) (Bus_data_val(v)->bus)
 
 static void finalize_bus(value v)
 {
-  /* GstBus *e = Bus_val(v); */
+  bus_t *bus = Bus_data_val(v);
+  caml_remove_global_root(&bus->element);
+  free(bus);
 }
 
 static struct custom_operations bus_ops =
@@ -375,18 +383,25 @@ static struct custom_operations bus_ops =
 static value value_of_bus(GstBus *b)
 {
   if (!b) caml_raise_constant(*caml_named_value("gstreamer_exn_error"));
-  value ans = caml_alloc_custom(&bus_ops, sizeof(GstBus*), 0, 1);
-  Bus_val(ans) = b;
+  value ans = caml_alloc_custom(&bus_ops, sizeof(bus_t*), 0, 1);
+  bus_t *bus = malloc(sizeof(bus));
+  bus->bus = b;
+  bus->element = 0;
+  caml_register_global_root(&bus->element);
+  Bus_data_val(ans) = bus;
   return ans;
 }
 
 CAMLprim value ocaml_gstreamer_bus_of_element(value _e)
 {
   CAMLparam1(_e);
-  /* TODO: we should keep a ref on this element so that the bus does not get
-     invalidated by the garbage collection of e */
+  CAMLlocal1(ans);
   GstElement *e = Element_val(_e);
-  CAMLreturn(value_of_bus(GST_ELEMENT_BUS(e)));
+  ans = value_of_bus(GST_ELEMENT_BUS(e));
+  /* We keep a ref on this element so that the bus does not get invalidated by
+     the garbage collection of e */
+  Bus_data_val(ans)->element = _e;
+  CAMLreturn(ans);
 }
 
 CAMLprim value ocaml_gstreamer_bus_pop_filtered(value _bus, value _filter)

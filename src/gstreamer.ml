@@ -1,8 +1,8 @@
-exception Error
+exception Failure
 exception End_of_stream
 
 let () =
-  Callback.register_exception "gstreamer_exn_error" Error;
+  Callback.register_exception "gstreamer_exn_failure" Failure;
   Callback.register_exception "gstreamer_exn_eos" End_of_stream
 
 external init : (string array) option -> unit = "ocaml_gstreamer_init"

@@ -1,4 +1,4 @@
-exception Error
+exception Failure
 exception End_of_stream
 
 val init : ?argv:(string array) -> unit -> unit

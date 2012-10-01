@@ -146,7 +146,7 @@ static value val_of_state(GstState state)
   int i;
   for(i = 0; i < states_len; i++)
     if (state == states[i])
-      return i;
+      return Val_int(i);
   assert(0);
 }
 
@@ -155,8 +155,7 @@ static value value_of_state_change_return(GstStateChangeReturn ret)
   switch(ret)
     {
     case GST_STATE_CHANGE_FAILURE:
-      /* TODO: raise an error */
-      assert(0);
+      caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
 
     case GST_STATE_CHANGE_SUCCESS:
       return Val_int(0);
@@ -283,7 +282,7 @@ static struct custom_operations message_ops =
 
 static value value_of_message(GstMessage *msg)
 {
-  if (!msg) caml_raise_constant(*caml_named_value("gstreamer_exn_error"));
+  if (!msg) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
   value ans = caml_alloc_custom(&message_ops, sizeof(GstMessage*), 0, 1);
   Message_val(ans) = msg;
   return ans;
@@ -384,7 +383,7 @@ static struct custom_operations bus_ops =
 
 static value value_of_bus(GstBus *b)
 {
-  if (!b) caml_raise_constant(*caml_named_value("gstreamer_exn_error"));
+  if (!b) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
   value ans = caml_alloc_custom(&bus_ops, sizeof(bus_t*), 0, 1);
   bus_t *bus = malloc(sizeof(bus));
   bus->bus = b;
@@ -756,7 +755,7 @@ CAMLprim value ocaml_gstreamer_appsink_pull_buffer(value _as)
       if (gst_app_sink_is_eos(as->appsink))
         caml_raise_constant(*caml_named_value("gstreamer_exn_eos"));
       else
-        caml_raise_constant(*caml_named_value("gstreamer_exn_error"));
+        caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
     }
 
   caml_release_runtime_system();

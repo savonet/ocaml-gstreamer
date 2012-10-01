@@ -80,6 +80,38 @@ module Pipeline = struct
   external parse_launch : string -> t = "ocaml_gstreamer_pipeline_parse_launch"
 end
 
+module Message = struct
+  (* TODO: add more... *)
+  type message_type =
+  | Error
+  | Tag
+  | Async_done
+
+  type t
+
+  external message_type : t -> message_type = "ocaml_gstreamer_message_type"
+
+  external source_name : t -> string = "ocaml_gstreamer_message_source_name"
+
+  external parse_tag : t -> (string * string array) array = "ocaml_gstreamer_message_parse_tag"
+  let parse_tag msg =
+    let tags = parse_tag msg in
+    let tags = Array.map (fun (l,v) -> l, Array.to_list v) tags in
+    Array.to_list tags
+end
+
+module Bus = struct
+  type t
+
+  external of_element : Element.t -> t = "ocaml_gstreamer_bus_of_element"
+
+  external pop_filtered : t -> Message.message_type array -> Message.t option = "ocaml_gstreamer_bus_pop_filtered"
+  let pop_filtered bus filter = pop_filtered bus (Array.of_list filter)
+
+  external timed_pop_filtered : t -> Message.message_type array -> Message.t = "ocaml_gstreamer_bus_timed_pop_filtered"
+  let timed_pop_filtered bus filter = timed_pop_filtered bus (Array.of_list filter)
+end
+
 module App_src = struct
   type t
 

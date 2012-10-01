@@ -10,6 +10,7 @@
 
 #include <string.h>
 #include <assert.h>
+#include <stdio.h>
 
 #include <gst/gst.h>
 #include <gst/gstclock.h>
@@ -305,6 +306,204 @@ CAMLprim value ocaml_gstreamer_pipeline_parse_launch(value s)
   ans = value_of_element(e);
 
   CAMLreturn(ans);
+}
+
+/**** Message *****/
+
+static int message_types_len = 3;
+static const GstMessageType message_types[] = { GST_MESSAGE_ERROR, GST_MESSAGE_TAG, GST_MESSAGE_ASYNC_DONE };
+
+static GstMessageType message_type_of_int(int n)
+{
+  return message_types[n];
+}
+
+static int int_of_message_type(GstMessageType msg)
+{
+  int i;
+  for (i = 0; i < message_types_len; i++)
+    {
+      if (msg == message_types[i])
+        return i;
+    }
+  assert(0);
+}
+
+#define Message_val(v) (*(GstMessage**)Data_custom_val(v))
+
+static void finalize_message(value v)
+{
+  GstMessage *e = Message_val(v);
+  gst_message_unref(e);
+}
+
+static struct custom_operations message_ops =
+  {
+    "ocaml_gstreamer_message",
+    finalize_message,
+    custom_compare_default,
+    custom_hash_default,
+    custom_serialize_default,
+    custom_deserialize_default
+  };
+
+static value value_of_message(GstMessage *msg)
+{
+  if (!msg) caml_raise_constant(*caml_named_value("gstreamer_exn_error"));
+  value ans = caml_alloc_custom(&message_ops, sizeof(GstMessage*), 0, 1);
+  Message_val(ans) = msg;
+  return ans;
+}
+
+CAMLprim value ocaml_gstreamer_message_type(value _msg)
+{
+  CAMLparam1(_msg);
+  GstMessage *msg = Message_val(_msg);
+  CAMLreturn(Val_int(int_of_message_type(GST_MESSAGE_TYPE(msg))));
+}
+
+CAMLprim value ocaml_gstreamer_message_source_name(value _msg)
+{
+  CAMLparam1(_msg);
+  GstMessage *msg = Message_val(_msg);
+  CAMLreturn(caml_copy_string(GST_MESSAGE_SRC_NAME(msg)));
+}
+
+CAMLprim value ocaml_gstreamer_message_parse_tag(value _msg)
+{
+  CAMLparam1(_msg);
+  CAMLlocal4(v,s,t,ans);
+  GstMessage *msg = Message_val(_msg);
+  GstTagList *tags = NULL;
+  const GValue *val;
+  const gchar *tag;
+  int taglen;
+  int i, j, n;
+
+  caml_release_runtime_system();
+  gst_message_parse_tag(msg, &tags);
+  taglen = gst_tag_list_n_tags(tags);
+  caml_acquire_runtime_system();
+
+  ans = caml_alloc_tuple(taglen);
+  for(i = 0; i < taglen; i++)
+    {
+      t = caml_alloc_tuple(2);
+
+      // Tag name
+      tag = gst_tag_list_nth_tag_name(tags, i);
+      Store_field(t, 0, caml_copy_string(tag));
+
+      // Tag fields
+      n = gst_tag_list_get_tag_size(tags, tag);
+      v = caml_alloc_tuple(n);
+      for (j = 0; j < n; j++)
+        {
+          val = gst_tag_list_get_value_index(tags, tag, j);
+          if (G_VALUE_HOLDS_STRING(val))
+              s = caml_copy_string(g_value_get_string(val));
+          else
+            {
+              //TODO: better typed handling of non-string values?
+              char *vc = g_strdup_value_contents(val);
+              s = caml_copy_string(vc);
+              free(vc);
+            }
+          Store_field(v, j, s);
+        }
+      Store_field(t, 1, v);
+
+      Store_field(ans, i, t);
+    }
+
+  gst_tag_list_unref(tags);
+
+  CAMLreturn(ans);
+}
+
+/**** Bus ****/
+
+#define Bus_val(v) (*(GstBus**)Data_custom_val(v))
+
+static void finalize_bus(value v)
+{
+  /* GstBus *e = Bus_val(v); */
+}
+
+static struct custom_operations bus_ops =
+  {
+    "ocaml_gstreamer_bus",
+    finalize_bus,
+    custom_compare_default,
+    custom_hash_default,
+    custom_serialize_default,
+    custom_deserialize_default
+  };
+
+static value value_of_bus(GstBus *b)
+{
+  if (!b) caml_raise_constant(*caml_named_value("gstreamer_exn_error"));
+  value ans = caml_alloc_custom(&bus_ops, sizeof(GstBus*), 0, 1);
+  Bus_val(ans) = b;
+  return ans;
+}
+
+CAMLprim value ocaml_gstreamer_bus_of_element(value _e)
+{
+  CAMLparam1(_e);
+  /* TODO: we should keep a ref on this element so that the bus does not get
+     invalidated by the garbage collection of e */
+  GstElement *e = Element_val(_e);
+  CAMLreturn(value_of_bus(GST_ELEMENT_BUS(e)));
+}
+
+CAMLprim value ocaml_gstreamer_bus_pop_filtered(value _bus, value _filter)
+{
+  CAMLparam2(_bus, _filter);
+  CAMLlocal1(ans);
+  GstBus *bus = Bus_val(_bus);
+  GstMessageType filter = 0;
+  GstMessage *msg;
+  int i;
+
+  for(i = 0; i < Wosize_val(_filter); i++)
+    filter |= message_type_of_int(Field(_filter, i));
+
+  caml_release_runtime_system();
+  msg = gst_bus_pop_filtered(bus, filter);
+  caml_acquire_runtime_system();
+
+  if(!msg)
+    ans = Val_int(0);
+  else
+    {
+      ans = caml_alloc_tuple(1);
+      Store_field(ans, 0, value_of_message(msg));
+    }
+
+  CAMLreturn(ans);
+}
+
+CAMLprim value ocaml_gstreamer_bus_timed_pop_filtered(value _bus, value _filter)
+{
+  CAMLparam2(_bus, _filter);
+  CAMLlocal1(ans);
+  GstBus *bus = Bus_val(_bus);
+  GstMessageType filter = 0;
+  GstMessage *msg;
+  int i;
+
+  for(i = 0; i < Wosize_val(_filter); i++)
+    filter |= message_type_of_int(Field(_filter, i));
+
+  caml_release_runtime_system();
+  msg = gst_bus_timed_pop_filtered(bus, GST_CLOCK_TIME_NONE, filter);
+  caml_acquire_runtime_system();
+
+  /* TODO: raise a timeout exception */
+  assert(msg);
+
+  CAMLreturn(value_of_message(msg));
 }
 
 /***** Appsrc *****/

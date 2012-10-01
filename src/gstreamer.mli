@@ -67,6 +67,31 @@ module Pipeline : sig
   val parse_launch : string -> t
 end
 
+module Message : sig
+  type message_type =
+  | Error
+  | Tag
+  | Async_done
+
+  type t
+
+  val message_type : t -> message_type
+
+  val source_name : t -> string
+
+  val parse_tag : t -> (string * string list) list
+end
+
+module Bus : sig
+  type t
+
+  val of_element : Element.t -> t
+
+  val pop_filtered : t -> Message.message_type list -> Message.t option
+
+  val timed_pop_filtered : t -> Message.message_type list -> Message.t
+end
+
 module App_src : sig
   type t
 

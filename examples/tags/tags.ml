@@ -15,9 +15,9 @@ let () =
       Printf.printf "Message from %s\n%!" (Message.source_name msg);
       let typ = Message.message_type msg in
       if typ = Message.Error then failwith "Error message!";
-      if typ <> Message.Tag then raise Exit;
-      let tags = Message.parse_tag msg in
-      List.iter (fun (l,v) -> Printf.printf "- %s : %s\n%!" l (String.concat ", " v)) tags
+      if typ = Message.Tag then
+        let tags = Message.parse_tag msg in
+        List.iter (fun (l,v) -> Printf.printf "- %s : %s\n%!" l (String.concat ", " v)) tags
     done
   with
   | Exit -> ()

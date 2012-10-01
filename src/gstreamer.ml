@@ -59,33 +59,16 @@ module Element_factory = struct
   external make : string -> string -> t = "ocaml_gstreamer_element_factory_make"
 end
 
-module Bin = struct
-  type t = Element.t
-
-  let of_element e = e
-
-  external add : t -> Element.t -> unit = "ocaml_gstreamer_bin_add"
-
-  let add_many bin e =
-    List.iter (add bin) e
-
-  external get_by_name : t -> string -> Element.t = "ocaml_gstreamer_bin_get_by_name"
-end
-
-module Pipeline = struct
-  type t = Element.t
-
-  external create : string -> t = "ocaml_gstreamer_pipeline_create"
-
-  external parse_launch : string -> t = "ocaml_gstreamer_pipeline_parse_launch"
-end
-
 module Message = struct
   (* TODO: add more... *)
   type message_type =
   | Error
   | Tag
+  | State_changed
+  | Stream_status
+  | Duration_changed
   | Async_done
+  | Stream_start
 
   type t
 
@@ -110,6 +93,27 @@ module Bus = struct
 
   external timed_pop_filtered : t -> Message.message_type array -> Message.t = "ocaml_gstreamer_bus_timed_pop_filtered"
   let timed_pop_filtered bus filter = timed_pop_filtered bus (Array.of_list filter)
+end
+
+module Bin = struct
+  type t = Element.t
+
+  let of_element e = e
+
+  external add : t -> Element.t -> unit = "ocaml_gstreamer_bin_add"
+
+  let add_many bin e =
+    List.iter (add bin) e
+
+  external get_by_name : t -> string -> Element.t = "ocaml_gstreamer_bin_get_by_name"
+end
+
+module Pipeline = struct
+  type t = Element.t
+
+  external create : string -> t = "ocaml_gstreamer_pipeline_create"
+
+  external parse_launch : string -> t = "ocaml_gstreamer_pipeline_parse_launch"
 end
 
 module App_src = struct

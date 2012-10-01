@@ -239,79 +239,10 @@ CAMLprim value ocaml_gstreamer_element_factory_make(value factname, value name)
   CAMLreturn(ans);
 }
 
-/***** Bin ******/
-
-#define Bin_val(v) GST_BIN(Element_val(v))
-
-CAMLprim value ocaml_gstreamer_bin_add(value _bin, value _e)
-{
-  CAMLparam2(_bin, _e);
-  GstBin *bin = Bin_val(_bin);
-  GstElement *e = Element_val(_e);
-  gboolean ret;
-
-  caml_release_runtime_system();
-  /* TODO: we have to ref here and have the bin unref it children at finalize!
-     Namely, the bin should not have references to deallocated childs. */
-  //gst_object_ref(e);
-  ret = gst_bin_add(bin, e);
-  caml_acquire_runtime_system();
-
-  assert(ret);
-
-  CAMLreturn(Val_unit);
-}
-
-CAMLprim value ocaml_gstreamer_bin_get_by_name(value _bin, value _name)
-{
-  CAMLparam2(_bin, _name);
-  CAMLlocal1(ans);
-  GstBin *bin = Bin_val(_bin);
-  GstElement *e;
-
-  e = gst_bin_get_by_name(bin, String_val(_name));
-
-  CAMLreturn(value_of_element(e));
-}
-
-/***** Pipeline *****/
-
-CAMLprim value ocaml_gstreamer_pipeline_create(value s)
-{
-  CAMLparam1(s);
-  CAMLlocal1(ans);
-  GstElement *e;
-
-  e = gst_pipeline_new(String_val(s));
-
-  ans = value_of_element(e);
-  CAMLreturn(ans);
-}
-
-CAMLprim value ocaml_gstreamer_pipeline_parse_launch(value s)
-{
-  CAMLparam1(s);
-  CAMLlocal1(ans);
-  GError *err = NULL;
-  GstElement *e;
-
-  e = gst_parse_launch(String_val(s), &err);
-  if (err != NULL)
-    {
-      value s = caml_copy_string(err->message);
-      if (e) { gst_object_unref(e); }
-      g_error_free(err);
-      caml_raise_with_arg(*caml_named_value("gst_exn_gerror"), s);
-    }
-  ans = value_of_element(e);
-
-  CAMLreturn(ans);
-}
-
 /**** Message *****/
 
-static int message_types_len = 3;
-static const GstMessageType message_types[] = { GST_MESSAGE_ERROR, GST_MESSAGE_TAG, GST_MESSAGE_ASYNC_DONE };
+#define message_types_len 7
+static const GstMessageType message_types[message_types_len] = { GST_MESSAGE_ERROR, GST_MESSAGE_TAG, GST_MESSAGE_STATE_CHANGED, GST_MESSAGE_STREAM_STATUS, GST_MESSAGE_DURATION_CHANGED, GST_MESSAGE_ASYNC_DONE, GST_MESSAGE_STREAM_START };
 
 static GstMessageType message_type_of_int(int n)
 {
@@ -326,6 +257,7 @@ static int int_of_message_type(GstMessageType msg)
       if (msg == message_types[i])
         return i;
     }
+  printf("error in message: %d\n", msg);
   assert(0);
 }
 
@@ -504,6 +436,77 @@ CAMLprim value ocaml_gstreamer_bus_timed_pop_filtered(value _bus, value _filter)
   assert(msg);
 
   CAMLreturn(value_of_message(msg));
+}
+
+/***** Bin ******/
+
+#define Bin_val(v) GST_BIN(Element_val(v))
+
+CAMLprim value ocaml_gstreamer_bin_add(value _bin, value _e)
+{
+  CAMLparam2(_bin, _e);
+  GstBin *bin = Bin_val(_bin);
+  GstElement *e = Element_val(_e);
+  gboolean ret;
+
+  caml_release_runtime_system();
+  /* TODO: we have to ref here and have the bin unref it children at finalize!
+     Namely, the bin should not have references to deallocated childs. */
+  //gst_object_ref(e);
+  ret = gst_bin_add(bin, e);
+  caml_acquire_runtime_system();
+
+  assert(ret);
+
+  CAMLreturn(Val_unit);
+}
+
+CAMLprim value ocaml_gstreamer_bin_get_by_name(value _bin, value _name)
+{
+  CAMLparam2(_bin, _name);
+  CAMLlocal1(ans);
+  GstBin *bin = Bin_val(_bin);
+  GstElement *e;
+
+  e = gst_bin_get_by_name(bin, String_val(_name));
+
+  CAMLreturn(value_of_element(e));
+}
+
+/***** Pipeline *****/
+
+#define Pipeline_val(v) GST_PIPELINE(Element_val(v))
+
+CAMLprim value ocaml_gstreamer_pipeline_create(value s)
+{
+  CAMLparam1(s);
+  CAMLlocal1(ans);
+  GstElement *e;
+
+  e = gst_pipeline_new(String_val(s));
+
+  ans = value_of_element(e);
+  CAMLreturn(ans);
+}
+
+CAMLprim value ocaml_gstreamer_pipeline_parse_launch(value s)
+{
+  CAMLparam1(s);
+  CAMLlocal1(ans);
+  GError *err = NULL;
+  GstElement *e;
+
+  e = gst_parse_launch(String_val(s), &err);
+  if (err != NULL)
+    {
+      value s = caml_copy_string(err->message);
+      if (e) { gst_object_unref(e); }
+      g_error_free(err);
+      caml_raise_with_arg(*caml_named_value("gst_exn_gerror"), s);
+    }
+  ans = value_of_element(e);
+
+  CAMLreturn(ans);
 }
 
 /***** Appsrc *****/

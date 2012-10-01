@@ -108,4 +108,6 @@ module App_sink = struct
   external is_eos : t -> bool = "ocaml_gstreamer_appsink_is_eos"
 
   external on_new_buffer : t -> (unit -> unit) -> unit = "ocaml_gstreamer_appsink_connect_new_buffer"
+
+  external set_max_buffers : t -> int -> unit = "ocaml_gstreamer_appsink_set_max_buffers"
 end

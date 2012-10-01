@@ -95,4 +95,6 @@ module App_sink : sig
   val is_eos : t -> bool
 
   val on_new_buffer : t -> (unit -> unit) -> unit
+
+  val set_max_buffers : t -> int -> unit
 end

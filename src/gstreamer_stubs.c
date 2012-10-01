@@ -621,3 +621,16 @@ CAMLprim value ocaml_gstreamer_appsink_connect_new_buffer(value _as, value f)
   assert(as->new_buffer_hid);
   CAMLreturn(Val_unit);
 }
+
+CAMLprim value ocaml_gstreamer_appsink_set_max_buffers(value _as, value _n)
+{
+  CAMLparam2(_as, _n);
+  appsink *as = Appsink_val(_as);
+  int n = Int_val(_n);
+
+  caml_release_runtime_system();
+  gst_app_sink_set_max_buffers(as->appsink, n);
+  caml_acquire_runtime_system();
+
+  CAMLreturn(Val_unit);
+}

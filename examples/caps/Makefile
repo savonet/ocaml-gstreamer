@@ -1,5 +1,5 @@
-SOURCES = player.ml
-RESULT = player
+SOURCES = caps.ml
+RESULT = caps
 LIBS = bigarray gstreamer
 INCDIRS = ../../src
 THREADS = yes
@@ -7,6 +7,6 @@ THREADS = yes
 all: dnc
 
 test: all
-	./player ../../../ocaml-mm/examples/test.mp3
+	./caps test.mp3
 
 include OCamlMakefile

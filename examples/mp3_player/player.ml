@@ -9,10 +9,11 @@ let () =
   let decoder = Element_factory.make "mad" "decode" in
   let conv = Element_factory.make "audioconvert" "audioconvert" in
   let resample = Element_factory.make "audioresample" "audioresample" in
-  let audiosink = Element_factory.make "alsasink" "play_audio" in
+  let audiosink = Element_factory.make "pulsesink" "play_audio" in
     Bin.add_many (Bin.of_element bin) [filesrc; decoder; conv; resample; audiosink];
     Element.link_many [filesrc; decoder; conv; resample; audiosink];
-    ignore (Element.set_state bin State_playing);
+    ignore (Element.set_state bin Element.State_playing);
     Unix.sleep 5;
-    ignore (Element.set_state bin State_null);
+    ignore (Element.set_state bin Element.State_null);
+    Gstreamer.deinit ();
     Gc.full_major ()

@@ -82,6 +82,37 @@ CAMLprim value ocaml_gstreamer_version_string(value unit)
   CAMLreturn(caml_copy_string(gst_version_string()));
 }
 
+/***** Format *****/
+
+#define formats_len 6
+static const GstFormat formats[formats_len] = { GST_FORMAT_UNDEFINED, GST_FORMAT_DEFAULT, GST_FORMAT_BYTES, GST_FORMAT_TIME, GST_FORMAT_BUFFERS, GST_FORMAT_PERCENT };
+
+static GstFormat format_val(value v)
+{
+  return formats[Int_val(v)];
+}
+
+/*
+static value val_format(GstFormat fmt)
+{
+  int i;
+  for (i = 0; i < formats_len; i++)
+    if (fmt == formats[i])
+      return Val_int(i);
+  assert(0);
+}
+*/
+
+/***** Event *****/
+
+#define seek_flags_len 9
+static const GstSeekFlags seek_flags[seek_flags_len] = { GST_SEEK_FLAG_NONE, GST_SEEK_FLAG_FLUSH, GST_SEEK_FLAG_ACCURATE, GST_SEEK_FLAG_KEY_UNIT, GST_SEEK_FLAG_SEGMENT, GST_SEEK_FLAG_SKIP, GST_SEEK_FLAG_SNAP_BEFORE, GST_SEEK_FLAG_SNAP_AFTER, GST_SEEK_FLAG_SNAP_NEAREST };
+
+static GstSeekFlags seek_flags_val(value v)
+{
+  return seek_flags[Int_val(v)];
+}
+
 /***** Element ******/
 
 #define Element_val(v) (*(GstElement**)Data_custom_val(v))
@@ -222,7 +253,44 @@ CAMLprim value ocaml_gstreamer_element_link(value _src, value _dst)
   ret = gst_element_link(src, dst);
   caml_acquire_runtime_system();
 
-  if(!ret) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
+  if (!ret) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
+  CAMLreturn(Val_unit);
+}
+
+CAMLprim value ocaml_gstreamer_element_position(value _e, value _fmt)
+{
+  CAMLparam2(_e, _fmt);
+  GstElement *e = Element_val(_e);
+  GstFormat fmt = format_val(_fmt);
+  gint64 pos;
+  gboolean ret;
+
+  caml_release_runtime_system();
+  ret = gst_element_query_position(e, fmt, &pos);
+  caml_acquire_runtime_system();
+
+  if (!ret) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
+  CAMLreturn(caml_copy_int64(pos));
+}
+
+CAMLprim value ocaml_gstreamer_element_seek_simple(value _e, value _fmt, value _flags, value _pos)
+{
+  CAMLparam4(_e, _fmt, _flags, _pos);
+  GstElement *e = Element_val(_e);
+  GstFormat fmt = format_val(_fmt);
+  GstSeekFlags flags = 0;
+  gint64 pos = Int64_val(_pos);
+  gboolean ret;
+  int i;
+
+  for (i = 0; i < Wosize_val(_flags); i++)
+    flags |= seek_flags_val(Field(_flags,i));
+
+  caml_release_runtime_system();
+  ret = gst_element_seek_simple(e, fmt, flags, pos);
+  caml_acquire_runtime_system();
+
+  if (!ret) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
   CAMLreturn(Val_unit);
 }
 

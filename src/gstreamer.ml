@@ -18,6 +18,28 @@ external version : unit -> int * int * int * int = "ocaml_gstreamer_version"
 
 external version_string : unit -> string = "ocaml_gstreamer_version_string"
 
+module Format = struct
+  type t =
+  | Undefined
+  | Default
+  | Bytes
+  | Time
+  | Buffers
+  | Percent
+end
+
+module Event = struct
+  type seek_flag =
+  | Seek_flag_none
+  | Seek_flag_flush
+  | Seek_flag_accurate
+  | Seek_flag_key_unit
+  | Seek_flag_segment
+  | Seek_flag_skip
+  | Seek_flag_snap_before
+  | Seek_flag_snap_after
+  | Seek_flag_snap_nearest
+end
 
 module Element = struct
   type t
@@ -51,6 +73,11 @@ module Element = struct
   let link_many ee =
     let e, ee = List.hd ee, List.tl ee in
     ignore (List.fold_left (fun e e' -> link e e'; e') e ee)
+
+  external position : t -> Format.t -> Int64.t = "ocaml_gstreamer_element_position"
+
+  external seek_simple : t -> Format.t -> Event.seek_flag array -> Int64.t -> unit = "ocaml_gstreamer_element_seek_simple"
+  let seek_simple e fmt flags n = seek_simple e fmt (Array.of_list flags) n
 end
 
 module Element_factory = struct

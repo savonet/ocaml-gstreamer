@@ -11,6 +11,30 @@ val version : unit -> int * int * int * int
 
 val version_string : unit -> string
 
+module Format : sig
+  (** Format for durations. *)
+  type t =
+  | Undefined
+  | Default
+  | Bytes
+  | Time (** time in nanoseconds *)
+  | Buffers
+  | Percent
+end
+
+module Event : sig
+  type seek_flag =
+  | Seek_flag_none
+  | Seek_flag_flush
+  | Seek_flag_accurate
+  | Seek_flag_key_unit
+  | Seek_flag_segment
+  | Seek_flag_skip
+  | Seek_flag_snap_before
+  | Seek_flag_snap_after
+  | Seek_flag_snap_nearest
+end
+
 module Element : sig
   type t
 
@@ -41,6 +65,11 @@ module Element : sig
   val link : t -> t -> unit
 
   val link_many : t list -> unit
+
+  val position : t -> Format.t -> Int64.t
+
+  (** Seek to a given position relative to the start of the stream. *)
+  val seek_simple : t -> Format.t -> Event.seek_flag list -> Int64.t -> unit
 end
 
 module Element_factory : sig

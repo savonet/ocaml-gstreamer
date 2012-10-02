@@ -222,7 +222,7 @@ CAMLprim value ocaml_gstreamer_element_link(value _src, value _dst)
   ret = gst_element_link(src, dst);
   caml_acquire_runtime_system();
 
-  assert(ret);
+  if(!ret) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
   CAMLreturn(Val_unit);
 }
 
@@ -448,9 +448,7 @@ CAMLprim value ocaml_gstreamer_bus_timed_pop_filtered(value _bus, value _filter)
   msg = gst_bus_timed_pop_filtered(bus, GST_CLOCK_TIME_NONE, filter);
   caml_acquire_runtime_system();
 
-  /* TODO: raise a timeout exception */
-  assert(msg);
-
+  if (!msg) caml_raise_constant(*caml_named_value("gstreamer_exn_timeout"));
   CAMLreturn(value_of_message(msg));
 }
 
@@ -472,8 +470,7 @@ CAMLprim value ocaml_gstreamer_bin_add(value _bin, value _e)
   ret = gst_bin_add(bin, e);
   caml_acquire_runtime_system();
 
-  assert(ret);
-
+  if (!ret) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
   CAMLreturn(Val_unit);
 }
 
@@ -606,7 +603,7 @@ CAMLprim value ocaml_gstreamer_appsrc_push_buffer_string(value _as, value _buf)
   bret = gst_buffer_map (gstbuf, &map, GST_MAP_WRITE);
   caml_acquire_runtime_system();
 
-  assert(bret);
+  if(!bret) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
   memcpy(map.data, (unsigned char*)String_val(_buf), buflen);
 
   caml_release_runtime_system();
@@ -614,9 +611,7 @@ CAMLprim value ocaml_gstreamer_appsrc_push_buffer_string(value _as, value _buf)
   ret = gst_app_src_push_buffer(as->appsrc, gstbuf);
   caml_acquire_runtime_system();
 
-  //TODO: raise
-  assert(ret == GST_FLOW_OK);
-
+  if (ret != GST_FLOW_OK) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
   CAMLreturn(Val_unit);
 }
 
@@ -644,7 +639,7 @@ CAMLprim value ocaml_gstreamer_appsrc_connect_need_data(value _as, value f)
   as->need_data_hid = g_signal_connect(as->appsrc, "need-data", G_CALLBACK(appsrc_need_data_cb), as);
   caml_acquire_runtime_system();
 
-  assert(as->need_data_hid);
+  if(!as->need_data_hid) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
   CAMLreturn(Val_unit);
 }
 
@@ -658,9 +653,7 @@ CAMLprim value ocaml_gstreamer_appsrc_end_of_stream(value _as)
   g_signal_emit_by_name(as->appsrc, "end-of-stream", &ret);
   caml_acquire_runtime_system();
 
-  //TODO: raise
-  assert(ret == GST_FLOW_OK);
-
+  if(ret != GST_FLOW_OK) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
   CAMLreturn(Val_unit);
 }
 
@@ -762,13 +755,13 @@ CAMLprim value ocaml_gstreamer_appsink_pull_buffer(value _as)
   gstbuf = gst_sample_get_buffer(gstsample);
   caml_acquire_runtime_system();
 
-  assert(gstbuf);
+  if (!gstbuf) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
 
   caml_release_runtime_system();
   ret = gst_buffer_map(gstbuf, &map, GST_MAP_READ);
   caml_acquire_runtime_system();
 
-  assert(ret);
+  if (!ret) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
 
   len = map.size;
   ans = caml_ba_alloc(CAML_BA_C_LAYOUT | CAML_BA_UINT8, 1, NULL, &len);
@@ -836,7 +829,7 @@ CAMLprim value ocaml_gstreamer_appsink_connect_new_buffer(value _as, value f)
   as->new_buffer_hid = g_signal_connect(as->appsink, "new-buffer", G_CALLBACK(appsink_new_buffer_cb), as);
   caml_acquire_runtime_system();
 
-  assert(as->new_buffer_hid);
+  if (!as->new_buffer_hid) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
   CAMLreturn(Val_unit);
 }
 
@@ -940,6 +933,6 @@ CAMLprim value ocaml_gstreamer_typefind_connect_have_type(value _tf, value f)
   tf->have_type_hid = g_signal_connect(tf->tf, "have-type", G_CALLBACK(typefind_have_type_cb), tf);
   caml_acquire_runtime_system();
 
-  assert(tf->have_type_hid);
+  if (!tf->have_type_hid) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
   CAMLreturn(Val_unit);
 }

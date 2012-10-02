@@ -1,24 +1,23 @@
-# $Id: Makefile.in 2660 2006-07-18 17:23:31Z dbaelde $
+# $Id$
 
-PROGNAME := ocaml-gstreamer
-DISTFILES := @AUTOCONF_INSTALL_FILES@ CHANGES COPYING Makefile.in README \
+PROGNAME := ocaml-bjack
+DISTFILES := @AUTOCONF_INSTALL_FILES@ CHANGES COPYING TIPS Makefile.in README \
 	bootstrap configure configure.ac  \
-	src/*.ml src/*.mli src/*.idl src/*.h src/Makefile.in src/META.in \
-	src/OCamlMakefile \
-	examples/*/*.ml examples/*/Makefile examples/*/OCamlMakefile
+	src/*.ml src/*.mli src/*.c src/Makefile.in src/META.in \
+	src/*.h src/OCamlMakefile 
 VERSION = @VERSION@
 
 all clean install uninstall:
 	$(MAKE) -C src $@
 
 distclean: clean
-	$(MAKE) -C examples clean
+	rm -rf doc/
 
 doc:
 	$(MAKE) -C src htdoc
 	mkdir -p doc
 	rm -rf doc/html
-	mv src/doc/gstreamer/html doc
+	mv src/doc/bjack/html doc
 	rm -rf src/doc
 
 dist:

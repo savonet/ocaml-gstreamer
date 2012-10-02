@@ -1,18 +1,19 @@
-ocaml-gstreamer
+ocaml-bjack
 
 
-This package contains an O'Caml interface for 
-Multimedia framework, 
-otherwise known as gstreamer.
+This package contains an OCaml blocking API for 
+the jack audio connection kit.
 
 Please read the COPYING file before using this software.
 
 Prerequisites:
 ==============
 
-- ocaml >= 3.0.6 (haven't tried earlier versions)
+- ocaml >= 3.10.1 (haven't tried earlier versions)
 
-- gstreamer >= 0.10.23 (haven't tried earlier versions)
+- jack audio connection kit >= 0.109.2 (haven't tried earlier versions)
+
+- samplerate >= 0.1.3 (haven't tried earlier versions)
 
 - findlib >= 0.8.1 (haven't tried earlier versions)
 

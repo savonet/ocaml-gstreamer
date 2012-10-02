@@ -510,12 +510,12 @@ CAMLprim value ocaml_gstreamer_pipeline_parse_launch(value s)
   GstElement *e;
 
   e = gst_parse_launch(String_val(s), &err);
-  if (err != NULL)
+  if (err)
     {
       value s = caml_copy_string(err->message);
       if (e) { gst_object_unref(e); }
       g_error_free(err);
-      caml_raise_with_arg(*caml_named_value("gst_exn_gerror"), s);
+      caml_raise_with_arg(*caml_named_value("gstreamer_exn_failure_msg"), s);
     }
   ans = value_of_element(e);
 

@@ -1,9 +1,11 @@
 exception Failure
+exception Failure_msg of string
 exception Timeout
 exception End_of_stream
 
 let () =
   Callback.register_exception "gstreamer_exn_failure" Failure;
+  Callback.register_exception "gstreamer_exn_failure_msg" (Failure_msg "");
   Callback.register_exception "gstreamer_exn_timeout" Timeout;
   Callback.register_exception "gstreamer_exn_eos" End_of_stream
 

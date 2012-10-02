@@ -1,4 +1,6 @@
 exception Failure
+exception Failure_msg of string
+exception Timeout
 exception End_of_stream
 
 val init : ?argv:(string array) -> unit -> unit

@@ -158,3 +158,17 @@ module App_sink : sig
 
   val set_max_buffers : t -> int -> unit
 end
+
+module Caps : sig
+  type t
+
+  val to_string : t -> string
+end
+
+module Type_find_element : sig
+  type t
+
+  val of_element : Element.t -> t
+
+  val on_have_type : t -> (int -> Caps.t -> unit) -> unit
+end

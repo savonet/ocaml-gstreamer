@@ -175,8 +175,16 @@ module App_sink = struct
   external set_max_buffers : t -> int -> unit = "ocaml_gstreamer_appsink_set_max_buffers"
 end
 
-module Type_find = struct
+module Caps = struct
   type t
 
-  external of_element : Element.t -> t = "ocaml_gstreamer_typefind_of_element"
+  external to_string : t -> string = "ocaml_gstreamer_caps_to_string"
+end
+
+module Type_find_element = struct
+  type t
+
+  external of_element : Element.t -> t = "ocaml_gstreamer_typefind_element_of_element"
+
+  external on_have_type : t -> (int -> Caps.t -> unit) -> unit = "ocaml_gstreamer_typefind_element_connect_have_type"
 end

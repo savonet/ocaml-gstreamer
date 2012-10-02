@@ -914,18 +914,63 @@ CAMLprim value ocaml_gstreamer_appsink_set_max_buffers(value _as, value _n)
   CAMLreturn(Val_unit);
 }
 
-/***** Typefind *****/
+/***** GstCaps *****/
+
+#define Caps_val(v) (*(GstCaps**)Data_custom_val(v))
+
+static void finalize_caps(value v)
+{
+  GstCaps *c = Caps_val(v);
+  gst_caps_unref(c);
+}
+
+static struct custom_operations caps_ops =
+  {
+    "ocaml_gstreamer_caps",
+    finalize_caps,
+    custom_compare_default,
+    custom_hash_default,
+    custom_serialize_default,
+    custom_deserialize_default
+  };
+
+static value value_of_caps(GstCaps *c)
+{
+  if (!c) caml_raise_constant(*caml_named_value("gstreamer_exn_error"));
+  value ans = caml_alloc_custom(&caps_ops, sizeof(GstCaps*), 0, 1);
+  Caps_val(ans) = c;
+  return ans;
+}
+
+CAMLprim value ocaml_gstreamer_caps_to_string(value _c)
+{
+  CAMLparam1(_c);
+  CAMLlocal1(ans);
+  GstCaps *c = Caps_val(_c);
+  char *s;
+
+  caml_release_runtime_system();
+  s = gst_caps_to_string(c);
+  caml_acquire_runtime_system();
+
+  ans = caml_copy_string(s);
+  free(s);
+
+  CAMLreturn(ans);
+}
+
+/***** Typefind element *****/
 
 typedef struct {
-  GstTypeFind *tf;
+  GstElement *tf;
   value have_type_cb; // Callback function
   gulong have_type_hid; // Callback handler ID
-} typefind;
+} typefind_element;
 
-#define Typefind_data_val(v) (*(typefind**)Data_custom_val(v))
-#define Typefind_val(v) (Typefind_data_val(v)->tf)
+#define Typefind_element_data_val(v) (*(typefind_element**)Data_custom_val(v))
+#define Typefind_element_val(v) (Typefind_element_data_val(v)->tf)
 
-static void disconnect_have_type(typefind *tf)
+static void disconnect_have_type(typefind_element *tf)
 {
   if(tf->have_type_cb)
     {
@@ -939,66 +984,67 @@ static void disconnect_have_type(typefind *tf)
     }
 }
 
-static void finalize_typefind(value v)
+static void finalize_typefind_element(value v)
 {
-  typefind *tf = Typefind_data_val(v);
+  typefind_element *tf = Typefind_element_data_val(v);
   disconnect_have_type(tf);
   free(tf);
 }
 
-static struct custom_operations typefind_ops =
+static struct custom_operations typefind_element_ops =
   {
-    "ocaml_gstreamer_typefind",
-    finalize_typefind,
+    "ocaml_gstreamer_typefind_element",
+    finalize_typefind_element,
     custom_compare_default,
     custom_hash_default,
     custom_serialize_default,
     custom_deserialize_default
   };
 
-static value value_of_typefind(GstTypeFind *e)
+static value value_of_typefind_element(GstElement *e)
 {
-  value ans = caml_alloc_custom(&typefind_ops, sizeof(typefind*), 0, 1);
-  typefind *tf = malloc(sizeof(typefind));
+  value ans = caml_alloc_custom(&typefind_element_ops, sizeof(typefind_element*), 0, 1);
+  typefind_element *tf = malloc(sizeof(typefind_element));
   tf->tf = e;
   tf->have_type_cb = 0;
   tf->have_type_hid = 0;
-  Typefind_data_val(ans) = tf;
+  Typefind_element_data_val(ans) = tf;
   return ans;
 }
 
-#define GST_TYPE_FIND(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_TYPE_FIND,GstTypeFind))
-
-CAMLprim value ocaml_gstreamer_typefind_of_element(value _e)
+CAMLprim value ocaml_gstreamer_typefind_element_of_element(value _e)
 {
   CAMLparam1(_e);
   GstElement *e = Element_val(_e);
-  CAMLreturn(value_of_typefind(GST_TYPE_FIND(e)));
+  //TODO: we don't have access to GST_TYPE_FIND_ELEMENT...
+  CAMLreturn(value_of_typefind_element(GST_ELEMENT(e)));
 }
 
-static void typefind_have_type_cb(GstTypeFind *_typefind, guint probability, GstCaps *caps, gpointer user_data)
+static void typefind_element_have_type_cb(GstElement *_typefind, guint probability, GstCaps *caps, gpointer user_data)
 {
-  typefind *tf = (typefind*)user_data;
+  typefind_element *tf = (typefind_element*)user_data;
+  assert(_typefind);
+  assert(caps);
 
-  caml_c_thread_register();
+  //For some reason, we segfault if we register the C thread (I guess the implementation is monothreaded?)
+  /* caml_c_thread_register(); */
   caml_acquire_runtime_system();
-  //TODO: arguments: proba and caps!
-  caml_callback(tf->have_type_cb, Val_unit);
+  caml_callback2(tf->have_type_cb, Val_int(probability), value_of_caps(caps));
   caml_release_runtime_system();
-  caml_c_thread_unregister();
+  /* caml_c_thread_unregister(); */
 }
 
-CAMLprim value ocaml_gstreamer_typefind_connect_have_type(value _tf, value f)
+CAMLprim value ocaml_gstreamer_typefind_element_connect_have_type(value _tf, value f)
 {
   CAMLparam2(_tf, f);
-  typefind *tf = Typefind_data_val(_tf);
+  typefind_element *tf = Typefind_element_data_val(_tf);
   disconnect_have_type(tf);
 
+  tf->have_type_cb = f;
   caml_register_global_root(&tf->have_type_cb);
 
   caml_release_runtime_system();
-  tf->have_type_cb = f;
-  tf->have_type_hid = g_signal_connect(tf->tf, "have-type", G_CALLBACK(typefind_have_type_cb), tf);
+  tf->have_type_hid = g_signal_connect(tf->tf, "have-type", G_CALLBACK(typefind_element_have_type_cb), tf);
   caml_acquire_runtime_system();
 
   if (!tf->have_type_hid) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));

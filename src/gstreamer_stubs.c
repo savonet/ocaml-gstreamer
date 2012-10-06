@@ -5,7 +5,6 @@
 #include <caml/callback.h>
 #include <caml/custom.h>
 #include <caml/bigarray.h>
-#include <caml/camlidlruntime.h>
 #include <caml/threads.h>
 
 #include <string.h>

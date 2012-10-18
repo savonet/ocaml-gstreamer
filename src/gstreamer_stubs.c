@@ -134,7 +134,7 @@ static struct custom_operations element_ops =
 
 static value value_of_element(GstElement *e)
 {
-  if (!e) caml_raise_constant(*caml_named_value("gstreamer_exn_error"));
+  if (!e) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
   value ans = caml_alloc_custom(&element_ops, sizeof(GstElement*), 0, 1);
   Element_val(ans) = e;
   return ans;
@@ -935,7 +935,7 @@ static struct custom_operations caps_ops =
 
 static value value_of_caps(GstCaps *c)
 {
-  if (!c) caml_raise_constant(*caml_named_value("gstreamer_exn_error"));
+  if (!c) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
   value ans = caml_alloc_custom(&caps_ops, sizeof(GstCaps*), 0, 1);
   Caps_val(ans) = c;
   return ans;

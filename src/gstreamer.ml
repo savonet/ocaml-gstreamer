@@ -143,6 +143,18 @@ module Pipeline = struct
   external parse_launch : string -> t = "ocaml_gstreamer_pipeline_parse_launch"
 end
 
+module Buffer = struct
+  type t
+
+  external of_string : string -> int -> int -> t = "ocaml_gstreamer_buffer_of_string"
+
+  external set_presentation_time : t -> Int64.t -> unit = "ocaml_gstreamer_buffer_set_presentation_time"
+
+  external set_decoding_time : t -> Int64.t -> unit = "ocaml_gstreamer_buffer_set_decoding_time"
+
+  external set_duration : t -> Int64.t -> unit = "ocaml_gstreamer_buffer_set_duration"
+end
+
 module App_src = struct
   type t
 
@@ -150,11 +162,16 @@ module App_src = struct
 
   external to_element : t -> Element.t = "ocaml_gstreamer_appsrc_to_element"
 
+  external push_buffer : t -> Buffer.t -> unit = "ocaml_gstreamer_appsrc_push_buffer"
+
+  (* TODO: implement this with push_buffer *)
   external push_buffer_string : t -> string -> unit = "ocaml_gstreamer_appsrc_push_buffer_string"
 
   external on_need_data : t -> (int -> unit) -> unit = "ocaml_gstreamer_appsrc_connect_need_data"
 
   external end_of_stream : t -> unit = "ocaml_gstreamer_appsrc_end_of_stream"
+
+  external set_format : t -> Format.t -> unit = "ocaml_gstreamer_appsrc_set_format"
 end
 
 module App_sink = struct
@@ -170,7 +187,7 @@ module App_sink = struct
 
   external is_eos : t -> bool = "ocaml_gstreamer_appsink_is_eos"
 
-  external on_new_buffer : t -> (unit -> unit) -> unit = "ocaml_gstreamer_appsink_connect_new_buffer"
+  external on_new_sample : t -> (unit -> unit) -> unit = "ocaml_gstreamer_appsink_connect_new_sample"
 
   external set_max_buffers : t -> int -> unit = "ocaml_gstreamer_appsink_set_max_buffers"
 end

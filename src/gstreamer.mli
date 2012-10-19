@@ -127,6 +127,18 @@ module Pipeline : sig
   val parse_launch : string -> t
 end
 
+module Buffer : sig
+  type t
+
+  val of_string : string -> int -> int -> t
+
+  val set_presentation_time : t -> Int64.t -> unit
+
+  val set_decoding_time : t -> Int64.t -> unit
+
+  val set_duration : t -> Int64.t -> unit
+end
+
 module App_src : sig
   type t
 
@@ -134,11 +146,15 @@ module App_src : sig
 
   val of_element : Element.t -> t
 
+  val push_buffer : t -> Buffer.t -> unit
+
   val push_buffer_string : t -> string -> unit
 
   val on_need_data : t -> (int -> unit) -> unit
 
   val end_of_stream : t -> unit
+
+  val set_format : t -> Format.t -> unit
 end
 
 module App_sink : sig
@@ -154,7 +170,7 @@ module App_sink : sig
 
   val is_eos : t -> bool
 
-  val on_new_buffer : t -> (unit -> unit) -> unit
+  val on_new_sample : t -> (unit -> unit) -> unit
 
   val set_max_buffers : t -> int -> unit
 end

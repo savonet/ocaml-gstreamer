@@ -18,6 +18,8 @@ external version : unit -> int * int * int * int = "ocaml_gstreamer_version"
 
 external version_string : unit -> string = "ocaml_gstreamer_version_string"
 
+type data = (int, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1.t
+
 module Format = struct
   type t =
   | Undefined
@@ -148,6 +150,8 @@ module Buffer = struct
 
   external of_string : string -> int -> int -> t = "ocaml_gstreamer_buffer_of_string"
 
+  external of_data : data -> int -> int -> t = "ocaml_gstreamer_buffer_of_data"
+
   external set_presentation_time : t -> Int64.t -> unit = "ocaml_gstreamer_buffer_set_presentation_time"
 
   external set_decoding_time : t -> Int64.t -> unit = "ocaml_gstreamer_buffer_set_decoding_time"
@@ -179,7 +183,7 @@ module App_sink = struct
 
   external of_element : Element.t -> t = "ocaml_gstreamer_appsink_of_element"
 
-  external pull_buffer : t -> (int, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1.t = "ocaml_gstreamer_appsink_pull_buffer"
+  external pull_buffer : t -> data = "ocaml_gstreamer_appsink_pull_buffer"
 
   external pull_buffer_string : t -> string = "ocaml_gstreamer_appsink_pull_buffer_string"
 

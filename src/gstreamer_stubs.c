@@ -643,6 +643,32 @@ CAMLprim value ocaml_gstreamer_buffer_of_string(value s, value _off, value _len)
   CAMLreturn(value_of_buffer(gstbuf));
 }
 
+CAMLprim value ocaml_gstreamer_buffer_of_data(value _ba, value _off, value _len)
+{
+  CAMLparam1(_ba);
+  int bufoff = Int_val(_off);
+  int buflen = Int_val(_len);
+  GstBuffer *gstbuf;
+  GstMapInfo map;
+  gboolean bret;
+
+  assert(buflen+bufoff <= Caml_ba_array_val(_ba)->dim[0]);
+
+  caml_release_runtime_system();
+  gstbuf = gst_buffer_new_and_alloc(buflen);
+  bret = gst_buffer_map(gstbuf, &map, GST_MAP_WRITE);
+  caml_acquire_runtime_system();
+
+  if(!bret) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
+  memcpy(map.data, (unsigned char*)Caml_ba_data_val(_ba)+bufoff, buflen);
+
+  caml_release_runtime_system();
+  gst_buffer_unmap(gstbuf, &map);
+  caml_acquire_runtime_system();
+
+  CAMLreturn(value_of_buffer(gstbuf));
+}
+
 CAMLprim value ocaml_gstreamer_buffer_set_presentation_time(value _buf, value _t)
 {
   CAMLparam2(_buf, _t);

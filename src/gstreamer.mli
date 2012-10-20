@@ -11,6 +11,8 @@ val version : unit -> int * int * int * int
 
 val version_string : unit -> string
 
+type data = (int, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1.t
+
 module Format : sig
   (** Format for durations. *)
   type t =
@@ -132,6 +134,8 @@ module Buffer : sig
 
   val of_string : string -> int -> int -> t
 
+  val of_data : data -> int -> int -> t
+
   val set_presentation_time : t -> Int64.t -> unit
 
   val set_decoding_time : t -> Int64.t -> unit
@@ -162,7 +166,7 @@ module App_sink : sig
 
   val of_element : Element.t -> t
 
-  val pull_buffer : t -> (int, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1.t
+  val pull_buffer : t -> data
 
   val pull_buffer_string : t -> string
 

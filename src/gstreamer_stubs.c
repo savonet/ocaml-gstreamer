@@ -102,6 +102,12 @@ static value val_format(GstFormat fmt)
 }
 */
 
+CAMLprim value ocaml_gstreamer_format_to_string(value _f)
+{
+  GstFormat f = format_val(_f);
+  return caml_copy_string(gst_format_get_name(f));
+}
+
 /***** Event *****/
 
 #define seek_flags_len 9

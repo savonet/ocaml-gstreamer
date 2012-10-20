@@ -22,6 +22,8 @@ module Format : sig
   | Time (** time in nanoseconds *)
   | Buffers
   | Percent
+
+  val to_string : t -> string
 end
 
 module Event : sig

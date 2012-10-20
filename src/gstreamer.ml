@@ -28,6 +28,8 @@ module Format = struct
   | Time
   | Buffers
   | Percent
+
+  external to_string : t -> string = "ocaml_gstreamer_format_to_string"
 end
 
 module Event = struct

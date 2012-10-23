@@ -1,6 +1,7 @@
 Makefile
 aclocal.m4
 autom4te.cache/
+*.annot
 config.guess
 config.log
 config.status

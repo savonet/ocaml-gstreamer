@@ -156,8 +156,11 @@ module App_src : sig
 
   val push_buffer_string : t -> string -> unit
 
+  (** Register a callback that will be called when data need to be fed into the
+      source (the argument is the number of bytes needed by the source). *)
   val on_need_data : t -> (int -> unit) -> unit
 
+  (** Emit an end of stream signal. *)
   val end_of_stream : t -> unit
 
   val set_format : t -> Format.t -> unit
@@ -168,7 +171,7 @@ module App_sink : sig
 
   val of_element : Element.t -> t
 
-  val pull_buffer : t -> data
+  val pull_buffer_data : t -> data
 
   val pull_buffer_string : t -> string
 

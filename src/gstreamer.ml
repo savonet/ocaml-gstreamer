@@ -211,3 +211,21 @@ module Type_find_element = struct
 
   external on_have_type : t -> (int -> Caps.t -> unit) -> unit = "ocaml_gstreamer_typefind_element_connect_have_type"
 end
+
+module Tag_setter = struct
+  type t = Element.t
+
+  type merge_mode =
+  | Undefined
+  | Replace_all
+  | Replace
+  | Append
+  | Prepend
+  | Keep
+  | Keep_all
+  | Count
+
+  let of_element e = e
+
+  external add_tag : t -> merge_mode -> string -> string -> unit = "ocaml_gstreamer_tag_setter_add_tag"
+end

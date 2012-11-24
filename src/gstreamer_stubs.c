@@ -1198,3 +1198,35 @@ CAMLprim value ocaml_gstreamer_typefind_element_connect_have_type(value _tf, val
   if (!tf->have_type_hid) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
   CAMLreturn(Val_unit);
 }
+
+/***** TagSetter element *****/
+
+#define TagSetter_val(v) GST_TAG_SETTER(Element_val(v))
+
+#define merge_modes_len 8
+static const GstTagMergeMode merge_modes[merge_modes_len] = { GST_TAG_MERGE_UNDEFINED, GST_TAG_MERGE_REPLACE_ALL, GST_TAG_MERGE_REPLACE, GST_TAG_MERGE_APPEND, GST_TAG_MERGE_PREPEND, GST_TAG_MERGE_KEEP, GST_TAG_MERGE_KEEP_ALL, GST_TAG_MERGE_COUNT };
+
+static GstTagMergeMode merge_mode_of_int(int n)
+{
+  return merge_modes[n];
+}
+
+/*
+static int int_of_merge_mode(GstTagMergeMode msg)
+{
+  int i;
+  for (i = 0; i < merge_modes_len; i++)
+    {
+      if (msg == merge_modes[i])
+        return i;
+    }
+  printf("error in tag merge mode: %d\n", msg);
+  assert(0);
+}
+*/
+
+CAMLprim value ocaml_gstreamer_tag_setter_add_tag(value _t, value _mode, value _name, value _v)
+{
+  gst_tag_setter_add_tags(TagSetter_val(_t), merge_mode_of_int(_mode), String_val(_name), String_val(_v), NULL);
+  return Val_unit;
+}

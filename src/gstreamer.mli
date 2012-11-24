@@ -197,3 +197,21 @@ module Type_find_element : sig
 
   val on_have_type : t -> (int -> Caps.t -> unit) -> unit
 end
+
+module Tag_setter : sig
+  type t
+
+  type merge_mode =
+  | Undefined
+  | Replace_all
+  | Replace
+  | Append
+  | Prepend
+  | Keep
+  | Keep_all
+  | Count
+
+  val of_element : Element.t -> t
+
+  val add_tag : t -> merge_mode -> string -> string -> unit
+end

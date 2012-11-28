@@ -140,7 +140,7 @@ static struct custom_operations element_ops =
 
 static value value_of_element(GstElement *e)
 {
-  if (!e) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
+  if (!e) caml_raise_not_found();
   value ans = caml_alloc_custom(&element_ops, sizeof(GstElement*), 0, 1);
   Element_val(ans) = e;
   return ans;

@@ -120,6 +120,8 @@ module Bin : sig
 
   val add_many : t -> Element.t list -> unit
 
+  (** [get_by_name "foo"] find a bin by name.
+    * raises [Not_found] if element does not exist. *) 
   val get_by_name : t -> string -> Element.t
 end
 

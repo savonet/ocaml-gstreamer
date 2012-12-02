@@ -191,8 +191,8 @@ module App_src : sig
 
   val of_element : Element.t -> t
 
-  (** Push a buffer in data format. *)
-  val push_buffer_data : t -> Buffer.t -> unit
+  (** Push a buffer. *)
+  val push_buffer : t -> Buffer.t -> unit
 
   (** Push a buffer in string format. *)
   val push_buffer_string : t -> string -> unit

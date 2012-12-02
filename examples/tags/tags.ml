@@ -2,6 +2,11 @@ open Gstreamer
 
 let () =
   Gstreamer.init ();
+  if Array.length Sys.argv < 2 then
+    (
+      Printf.eprintf "Please provide a file as first argument.\n%!";
+      exit 1
+    );
   let pipeline = Printf.sprintf "filesrc location=\"%s\" ! decodebin ! fakesink" Sys.argv.(1) in
   let bin = Pipeline.parse_launch pipeline in
   (* Go in paused state. *)

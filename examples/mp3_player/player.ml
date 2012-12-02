@@ -5,6 +5,11 @@ let () =
   Printf.printf "%s\n%!" (version_string ());
   let bin = Pipeline.create "pipeline" in
   let filesrc = Element_factory.make "filesrc" "disk_source" in
+  if Array.length Sys.argv < 2 then
+    (
+      Printf.eprintf "Please provide an mp3 file as first argument.\n%!";
+      exit 1
+    );
   Element.set_property_string filesrc "location" Sys.argv.(1);
   let decoder = Element_factory.make "mad" "decode" in
   let conv = Element_factory.make "audioconvert" "audioconvert" in

@@ -1,6 +1,6 @@
-0.2.0 (unreleased)
+0.2.0 (2013-02-19)
 =====
-* Complete rewrite to get rid of OCamlIDL.
+* Complete rewrite to get rid of OCamlIDL, lots of modules added.
 
 
 0.1.0 (2011-10-04)

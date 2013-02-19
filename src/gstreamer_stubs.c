@@ -537,9 +537,7 @@ CAMLprim value ocaml_gstreamer_bin_add(value _bin, value _e)
   gboolean ret;
 
   caml_release_runtime_system();
-  /* TODO: we have to ref here and have the bin unref it children at finalize!
-     Namely, the bin should not have references to deallocated childs. */
-  //gst_object_ref(e);
+  gst_object_ref(e);
   ret = gst_bin_add(bin, e);
   caml_acquire_runtime_system();
 

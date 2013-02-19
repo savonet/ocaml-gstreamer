@@ -1,20 +1,13 @@
-ocaml-gstreamer
-
-
-This package contains an O'Caml interface for 
-Multimedia framework, 
-otherwise known as gstreamer.
+ocaml-gstreamer is an OCaml interface for the GStreamer Multimedia framework.
 
 Please read the COPYING file before using this software.
 
 Prerequisites:
 ==============
 
-- ocaml >= 3.0.6 (haven't tried earlier versions)
-
-- gstreamer >= 0.10.23 (haven't tried earlier versions)
-
-- findlib >= 0.8.1 (haven't tried earlier versions)
+- ocaml >= 3.12.0
+- gstreamer >= 1.0.0
+- findlib >= 0.8.1
 
 Compilation:
 ============

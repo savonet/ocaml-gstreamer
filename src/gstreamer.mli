@@ -77,7 +77,7 @@ module Element : sig
 
   (** Return value for state change. *)
   type state_change =
-  | State_change_sucess
+  | State_change_success
   | State_change_async
   | State_change_no_preroll
 

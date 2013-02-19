@@ -64,7 +64,7 @@ module Element = struct
   external string_of_state : state -> string = "ocaml_gstreamer_element_string_of_state"
 
   type state_change =
-  | State_change_sucess
+  | State_change_success
   | State_change_async
   | State_change_no_preroll
 

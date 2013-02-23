@@ -942,7 +942,7 @@ CAMLprim value ocaml_gstreamer_appsink_emit_signals(value _as)
   CAMLreturn(Val_unit);
 }
 
-CAMLprim value ocaml_gstreamer_appsink_pull_buffer(value _as)
+CAMLprim value ocaml_gstreamer_appsink_pull_buffer(value _as, value string_mode)
 {
   CAMLparam1(_as);
   CAMLlocal1(ans);
@@ -978,28 +978,18 @@ CAMLprim value ocaml_gstreamer_appsink_pull_buffer(value _as)
   if (!ret) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
 
   len = map.size;
-  ans = caml_ba_alloc(CAML_BA_C_LAYOUT | CAML_BA_UINT8, 1, NULL, &len);
-  memcpy(Caml_ba_data_val(ans), map.data, len);
+  if (string_mode == Val_false) {
+    ans = caml_ba_alloc(CAML_BA_C_LAYOUT | CAML_BA_UINT8, 1, NULL, &len);
+    memcpy(Caml_ba_data_val(ans), map.data, len);
+  } else {
+    ans = caml_alloc_string(len);
+    memcpy(String_val(ans), map.data, len);
+  }
 
   caml_release_runtime_system();
   gst_buffer_unmap(gstbuf, &map);
   gst_sample_unref(gstsample);
   caml_acquire_runtime_system();
-
-  CAMLreturn(ans);
-}
-
-/* TODO: optimized version? */
-CAMLprim value ocaml_gstreamer_appsink_pull_buffer_string(value _as)
-{
-  CAMLparam1(_as);
-  CAMLlocal2(ba,ans);
-  int len;
-
-  ba = ocaml_gstreamer_appsink_pull_buffer(_as);
-  len = Caml_ba_array_val(ba)->dim[0];
-  ans = caml_alloc_string(len);
-  memcpy(String_val(ans), Caml_ba_data_val(ba), len);
 
   CAMLreturn(ans);
 }

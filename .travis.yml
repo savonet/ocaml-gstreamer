@@ -1,0 +1,10 @@
+language: c
+addons:
+  apt:
+    packages:
+    - ocaml-nox
+    - ocaml-findlib
+    - libgstreamer1.0-dev
+    - libgstreamer-plugins-base1.0-dev
+
+script: ./bootstrap && ./configure && make

@@ -16,11 +16,14 @@ let () =
   let src = App_src.of_element src in
   ignore (Element.set_state play_bin Element.State_playing);
   ignore (Element.set_state read_bin Element.State_playing);
-  while true do
+  let n = ref 0 in
+  while !n < 200 do
+    incr n;
     let buf = App_sink.pull_buffer_string sink in
     let buf = Buffer.of_string buf 0 (String.length buf) in
     App_src.push_buffer src buf
   done;
   ignore (Element.set_state read_bin Element.State_null);
   ignore (Element.set_state play_bin Element.State_null);
+  Gstreamer.deinit ();
   Gc.full_major ()

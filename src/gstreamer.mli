@@ -95,6 +95,9 @@ module Element : sig
   (** Current position of an element. *)
   val position : t -> Format.t -> Int64.t
 
+  (** Duration of an element. *)
+  val duration : t -> Format.t -> Int64.t
+
   (** Seek to a given position relative to the start of the stream. *)
   val seek_simple : t -> Format.t -> Event.seek_flag list -> Int64.t -> unit
 end

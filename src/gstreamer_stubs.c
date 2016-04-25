@@ -278,6 +278,22 @@ CAMLprim value ocaml_gstreamer_element_position(value _e, value _fmt)
   CAMLreturn(caml_copy_int64(pos));
 }
 
+CAMLprim value ocaml_gstreamer_element_duration(value _e, value _fmt)
+{
+  CAMLparam2(_e, _fmt);
+  GstElement *e = Element_val(_e);
+  GstFormat fmt = format_val(_fmt);
+  gint64 dur;
+  gboolean ret;
+
+  caml_release_runtime_system();
+  ret = gst_element_query_duration(e, fmt, &dur);
+  caml_acquire_runtime_system();
+
+  if (!ret) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
+  CAMLreturn(caml_copy_int64(dur));
+}
+
 CAMLprim value ocaml_gstreamer_element_seek_simple(value _e, value _fmt, value _flags, value _pos)
 {
   CAMLparam4(_e, _fmt, _flags, _pos);

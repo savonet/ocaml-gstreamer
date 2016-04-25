@@ -80,6 +80,8 @@ module Element = struct
 
   external position : t -> Format.t -> Int64.t = "ocaml_gstreamer_element_position"
 
+  external duration : t -> Format.t -> Int64.t = "ocaml_gstreamer_element_duration"
+
   external seek_simple : t -> Format.t -> Event.seek_flag array -> Int64.t -> unit = "ocaml_gstreamer_element_seek_simple"
   let seek_simple e fmt flags n = seek_simple e fmt (Array.of_list flags) n
 end

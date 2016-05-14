@@ -10,9 +10,8 @@ let timeToString nsd =
   let ms = if ms = 0 then "" else Printf.sprintf ".%d" ms in 
   Printf.sprintf "%s%d:%d%s" h m s ms
 
-let printProgression bin =
+let printProgression bin duration =
   let position = timeToString(Element.position bin Format.Time) in
-  let duration = timeToString(Element.duration bin Format.Time) in
   Printf.printf "Progression : %s / %s\n%!" position duration
 
 let () =
@@ -20,18 +19,24 @@ let () =
   let pipeline = Printf.sprintf "filesrc location=\"%s\" ! decodebin ! fakesink" Sys.argv.(1) in
   let bin = Pipeline.parse_launch pipeline in
 
-  ignore (Element.set_state bin Element.State_playing);
+  ignore (Element.set_state bin Element.State_paused);
    (* Wait for the state to complete. *)
   ignore (Element.get_state bin);
 
-  printProgression bin;
+  let duration = timeToString(Element.duration bin Format.Time) in
+  Printf.printf "Duration : %s\n%!" duration;
+
+  ignore (Element.set_state bin Element.State_playing);
+  ignore (Element.get_state bin);
+
+  printProgression bin duration;
 
   Unix.sleep 1;
-  
-  printProgression bin;
+
+  printProgression bin duration;
 
   Unix.sleep 1;
-  
-  printProgression bin;
+
+  printProgression bin duration;
 
   Gc.full_major ()

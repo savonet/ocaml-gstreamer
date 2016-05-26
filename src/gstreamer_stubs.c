@@ -331,8 +331,8 @@ CAMLprim value ocaml_gstreamer_element_factory_make(value factname, value name)
 
 /**** Message *****/
 
-#define message_types_len 8
-static const GstMessageType message_types[message_types_len] = { GST_MESSAGE_EOS, GST_MESSAGE_ERROR, GST_MESSAGE_TAG, GST_MESSAGE_STATE_CHANGED, GST_MESSAGE_STREAM_STATUS, GST_MESSAGE_DURATION_CHANGED, GST_MESSAGE_ASYNC_DONE, GST_MESSAGE_STREAM_START };
+#define message_types_len 7
+static const GstMessageType message_types[message_types_len] = { GST_MESSAGE_ERROR, GST_MESSAGE_TAG, GST_MESSAGE_STATE_CHANGED, GST_MESSAGE_STREAM_STATUS, GST_MESSAGE_DURATION_CHANGED, GST_MESSAGE_ASYNC_DONE, GST_MESSAGE_STREAM_START };
 
 static GstMessageType message_type_of_int(int n)
 {

@@ -504,7 +504,7 @@ CAMLprim value ocaml_gstreamer_bus_pop_filtered(value _bus, value _filter)
   int i;
 
   for(i = 0; i < Wosize_val(_filter); i++)
-    filter |= message_type_of_int(Field(_filter, i));
+    filter |= message_type_of_int(Int_val(Field(_filter, i)));
 
   caml_release_runtime_system();
   msg = gst_bus_pop_filtered(bus, filter);
@@ -531,7 +531,7 @@ CAMLprim value ocaml_gstreamer_bus_timed_pop_filtered(value _bus, value _filter)
   int i;
 
   for(i = 0; i < Wosize_val(_filter); i++)
-    filter |= message_type_of_int(Field(_filter, i));
+    filter |= message_type_of_int(Int_val(Field(_filter, i)));
 
   caml_release_runtime_system();
   msg = gst_bus_timed_pop_filtered(bus, GST_CLOCK_TIME_NONE, filter);

@@ -112,6 +112,7 @@ end
 (** Messages. *)
 module Message : sig
   type message_type =
+  | End_of_stream
   | Error
   | Tag
   | State_changed

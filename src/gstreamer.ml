@@ -95,6 +95,7 @@ end
 module Message = struct
   (* TODO: add more... *)
   type message_type =
+  | End_of_stream
   | Error
   | Tag
   | State_changed

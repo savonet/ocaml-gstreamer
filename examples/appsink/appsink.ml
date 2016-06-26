@@ -17,27 +17,27 @@ let () =
   ignore (Element.set_state play_bin Element.State_playing);
   ignore (Element.set_state read_bin Element.State_playing);
 	
-	Printf.printf "from App_sink.pull_buffer_data to App_src.push_buffer\n%!";
-	for i = 0 to 100 do
+  Printf.printf "from App_sink.pull_buffer_data to App_src.push_buffer\n%!";
+  for i = 0 to 100 do
     let buf = App_sink.pull_buffer_data sink in
     let buf = Buffer.of_data buf 0 (Bigarray.Array1.dim buf) in
     App_src.push_buffer src buf
-	done;
+  done;
 
-	Printf.printf "from App_sink.pull_buffer_string to App_src.push_buffer\n%!";
-	for i = 0 to 100 do
+  Printf.printf "from App_sink.pull_buffer_string to App_src.push_buffer\n%!";
+  for i = 0 to 100 do
     let buf = App_sink.pull_buffer_string sink in
     let buf = Buffer.of_string buf 0 (String.length buf) in
     App_src.push_buffer src buf
   done;
 
-	Printf.printf "from App_sink.pull_buffer_data to App_src.push_buffer_data\n%!";
-	for i = 0 to 100 do
+  Printf.printf "from App_sink.pull_buffer_data to App_src.push_buffer_data\n%!";
+  for i = 0 to 100 do
     let buf = App_sink.pull_buffer_data sink in
     App_src.push_buffer_data src buf
   done;
   
-	ignore (Element.set_state read_bin Element.State_null);
+  ignore (Element.set_state read_bin Element.State_null);
   ignore (Element.set_state play_bin Element.State_null);
   Gstreamer.deinit ();
   Gc.full_major ()

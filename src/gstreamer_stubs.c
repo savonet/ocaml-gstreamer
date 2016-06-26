@@ -832,6 +832,33 @@ CAMLprim value ocaml_gstreamer_appsrc_push_buffer(value _as, value _buf)
   CAMLreturn(Val_unit);
 }
 
+CAMLprim value ocaml_gstreamer_appsrc_push_buffer_data(value _as, value _buf)
+{
+  CAMLparam2(_as, _buf);
+  int buflen = Caml_ba_array_val(_buf)->dim[0];
+  appsrc *as = Appsrc_val(_as);
+  GstBuffer *gstbuf;
+  GstMapInfo map;
+  GstFlowReturn ret;
+  gboolean bret;
+
+  caml_release_runtime_system();
+  gstbuf = gst_buffer_new_and_alloc(buflen);
+  bret = gst_buffer_map(gstbuf, &map, GST_MAP_WRITE);
+  caml_acquire_runtime_system();
+
+  if(!bret) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
+  memcpy(map.data, (unsigned char*)Caml_ba_data_val(_buf), buflen);
+
+  caml_release_runtime_system();
+  gst_buffer_unmap(gstbuf, &map);
+  ret = gst_app_src_push_buffer(as->appsrc, gstbuf);
+  caml_acquire_runtime_system();
+
+  if (ret != GST_FLOW_OK) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
+  CAMLreturn(Val_unit);
+}
+
 static void appsrc_need_data_cb(GstAppSrc *gas, guint length, gpointer user_data)
 {
   appsrc *as = (appsrc*)user_data;

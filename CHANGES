@@ -2,6 +2,7 @@
 =====
 * Added Element.duration.
 * Added Message.End_of_stream.
+* Added App_src.push_buffer_data.
 
 0.2.1 (2015-08-03)
 =====

@@ -201,6 +201,9 @@ module App_src : sig
   (** Push a buffer in string format. *)
   val push_buffer_string : t -> string -> unit
 
+  (** Push a buffer in data format. *)
+  val push_buffer_data : t -> data -> unit
+
   (** Register a callback that will be called when data need to be fed into the
       source (the argument is the number of bytes needed by the source). *)
   val on_need_data : t -> (int -> unit) -> unit

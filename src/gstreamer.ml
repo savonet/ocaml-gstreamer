@@ -173,8 +173,9 @@ module App_src = struct
 
   external push_buffer : t -> Buffer.t -> unit = "ocaml_gstreamer_appsrc_push_buffer"
 
-  (* TODO: implement this with push_buffer_data *)
   external push_buffer_string : t -> string -> unit = "ocaml_gstreamer_appsrc_push_buffer_string"
+
+  external push_buffer_data : t -> data -> unit = "ocaml_gstreamer_appsrc_push_buffer_data"
 
   external on_need_data : t -> (int -> unit) -> unit = "ocaml_gstreamer_appsrc_connect_need_data"
 

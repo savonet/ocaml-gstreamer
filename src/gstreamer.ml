@@ -93,16 +93,40 @@ module Element_factory = struct
 end
 
 module Message = struct
-  (* TODO: add more... *)
   type message_type =
+  | Unknown
   | End_of_stream
   | Error
+  | Warning
+  | Info
   | Tag
+  | Buffering
   | State_changed
+  | State_dirty
+  | Step_done
+  | Clock_provide
+  | Clock_lost
+  | New_clock
+  | Structure_change
   | Stream_status
+  | Application
+  | Element
+  | Segment_start
+  | Segment_done
   | Duration_changed
+  | Latency
+  | Async_start
   | Async_done
+  | Request_state
+  | Step_start
+  | Qos
+  | Progress
+  | Toc
+  | Reset_time
   | Stream_start
+  | Need_context
+  | Have_context
+  | Any
 
   type t
 

@@ -1,4 +1,4 @@
-0.2.2 ()
+0.2.2 (2016-06-29)
 =====
 * Added Element.duration.
 * Added App_src.push_buffer_data.

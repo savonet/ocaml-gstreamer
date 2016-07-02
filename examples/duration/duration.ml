@@ -1,37 +1,44 @@
 open Gstreamer
 
 let timeToString nsd =
-  let msd = Int64.(to_int(div nsd (of_int 1000000))) in
-  let h = msd / 3600000 in
-  let m = (msd - (h * 3600000)) / 60000 in
-  let s = (msd - (h * 3600000) - (m * 60000)) / 1000 in
-  let ms = msd - (h * 3600000) - (m * 60000) - (s * 1000) in
+  let msd = Int64.(to_int(div nsd (of_int 1_000_000))) in
+  let h = msd / 3_600_000 in
+  let m = (msd - (h * 3_600_000)) / 60_000 in
+  let s = (msd - (h * 3_600_000) - (m * 60_000)) / 1000 in
   let h = if h = 0 then "" else Printf.sprintf "%d:" h in 
-  let ms = if ms = 0 then "" else Printf.sprintf ".%d" ms in 
-  Printf.sprintf "%s%d:%d%s" h m s ms
+  Printf.sprintf "%s%d:%d" h m s
 
 let printProgression bin =
-  let position = timeToString(Element.position bin Format.Time) in
-  let duration = timeToString(Element.duration bin Format.Time) in
-  Printf.printf "Progression : %s / %s\n%!" position duration
+  let duration = Element.duration bin Format.Time |> timeToString in
+
+  let rec loop() =
+    let position = Element.position bin Format.Time |> timeToString in
+
+    Printf.printf "Time : %s / %s  \r%!" position duration;
+
+    (* Refreshing the position every seconds (in nanoseconds) *)
+    let timeout = Int64.of_int 1_000_000_000 in
+    let filter = Message.[End_of_stream; Error] in
+
+    match Bus.timed_pop_filtered (Bus.of_element bin) ~timeout filter with
+    | exception Timeout -> loop()
+    | _ -> Printf.printf "\n"
+  in
+  loop()
 
 let () =
   Gstreamer.init ();
-  let pipeline = Printf.sprintf "filesrc location=\"%s\" ! decodebin ! fakesink" Sys.argv.(1) in
-  let bin = Pipeline.parse_launch pipeline in
 
-  ignore (Element.set_state bin Element.State_playing);
+  let formatPipeline = Printf.sprintf "filesrc location=\"%s\" ! decodebin ! audioconvert ! audioresample ! autoaudiosink" in
+  let bin = formatPipeline Sys.argv.(1) |> Pipeline.parse_launch in
+
+  Element.set_state bin Element.State_playing |> ignore;
    (* Wait for the state to complete. *)
-  ignore (Element.get_state bin);
+  Element.get_state bin |> ignore;
 
   printProgression bin;
 
-  Unix.sleep 1;
-  
-  printProgression bin;
+  Element.set_state bin Element.State_null |> ignore;
 
-  Unix.sleep 1;
-  
-  printProgression bin;
-
+  Gstreamer.deinit ();
   Gc.full_major ()

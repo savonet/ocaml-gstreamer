@@ -149,8 +149,8 @@ module Bus = struct
   external pop_filtered : t -> Message.message_type array -> Message.t option = "ocaml_gstreamer_bus_pop_filtered"
   let pop_filtered bus filter = pop_filtered bus (Array.of_list filter)
 
-  external timed_pop_filtered : t -> Message.message_type array -> Message.t = "ocaml_gstreamer_bus_timed_pop_filtered"
-  let timed_pop_filtered bus filter = timed_pop_filtered bus (Array.of_list filter)
+  external timed_pop_filtered : t -> ?timeout:Int64.t -> Message.message_type array -> Message.t = "ocaml_gstreamer_bus_timed_pop_filtered"
+  let timed_pop_filtered bus ?timeout filter = timed_pop_filtered bus ?timeout (Array.of_list filter)
 end
 
 module Bin = struct

@@ -163,7 +163,7 @@ module Bus : sig
 
   val pop_filtered : t -> Message.message_type list -> Message.t option
 
-  val timed_pop_filtered : t -> Message.message_type list -> Message.t
+  val timed_pop_filtered : t -> ?timeout:Int64.t -> Message.message_type list -> Message.t
 end
 
 (** Bins. *)

@@ -1,6 +1,7 @@
 0.2.3
 =====
 * Added timeout to Bus.timed_pop_filtered.
+* Added datetime tag support.
 
 0.2.2 (2016-06-29)
 =====

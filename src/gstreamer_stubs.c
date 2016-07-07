@@ -561,20 +561,25 @@ CAMLprim value ocaml_gstreamer_bus_pop_filtered(value _bus, value _filter)
   CAMLreturn(ans);
 }
 
-CAMLprim value ocaml_gstreamer_bus_timed_pop_filtered(value _bus, value _filter)
+CAMLprim value ocaml_gstreamer_bus_timed_pop_filtered(value _bus, value _timeout, value _filter)
 {
-  CAMLparam2(_bus, _filter);
+  CAMLparam3(_bus, _timeout, _filter);
   CAMLlocal1(ans);
   GstBus *bus = Bus_val(_bus);
+  GstClockTime timeout = GST_CLOCK_TIME_NONE;
   GstMessageType filter = 0;
   GstMessage *msg;
   int i;
+
+  if (Is_block(_timeout)) {
+    timeout = (GstClockTime)Int64_val(Field(_timeout, 0));
+  }
 
   for(i = 0; i < Wosize_val(_filter); i++)
     filter |= message_type_of_int(Int_val(Field(_filter, i)));
 
   caml_release_runtime_system();
-  msg = gst_bus_timed_pop_filtered(bus, GST_CLOCK_TIME_NONE, filter);
+  msg = gst_bus_timed_pop_filtered(bus, timeout, filter);
   caml_acquire_runtime_system();
 
   if (!msg) caml_raise_constant(*caml_named_value("gstreamer_exn_timeout"));

@@ -1,3 +1,7 @@
+0.2.3
+=====
+* Added timeout to Bus.timed_pop_filtered.
+
 0.2.2 (2016-06-29)
 =====
 * Added Element.duration.

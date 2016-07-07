@@ -461,9 +461,9 @@ CAMLprim value ocaml_gstreamer_message_parse_tag(value _msg)
             }
           else if (GST_VALUE_HOLDS_DATE_TIME(val)) {
               GstDateTime *dt = g_value_get_boxed(val);
-              char *dt_str = gst_date_time_to_iso8601_string(dt);
+              gchar *dt_str = gst_date_time_to_iso8601_string(dt);
               s = caml_copy_string(dt_str);
-              free(dt_str);
+              g_free(dt_str);
             }
           else {
               //TODO: better typed handling of non-string values?

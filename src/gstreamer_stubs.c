@@ -466,7 +466,7 @@ CAMLprim value ocaml_gstreamer_message_parse_tag(value _msg)
               free(dt_str);
             }
           else {
-          //TODO: better typed handling of non-string values?
+              //TODO: better typed handling of non-string values?
               char *vc = g_strdup_value_contents(val);
               s = caml_copy_string(vc);
               free(vc);

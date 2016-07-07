@@ -456,11 +456,17 @@ CAMLprim value ocaml_gstreamer_message_parse_tag(value _msg)
       for (j = 0; j < n; j++)
         {
           val = gst_tag_list_get_value_index(tags, tag, j);
-          if (G_VALUE_HOLDS_STRING(val))
+          if (G_VALUE_HOLDS_STRING(val)) {
               s = caml_copy_string(g_value_get_string(val));
-          else
-            {
-              //TODO: better typed handling of non-string values?
+            }
+          else if (GST_VALUE_HOLDS_DATE_TIME(val)) {
+              GstDateTime *dt = g_value_get_boxed(val);
+              char *dt_str = gst_date_time_to_iso8601_string(dt);
+              s = caml_copy_string(dt_str);
+              free(dt_str);
+            }
+          else {
+          //TODO: better typed handling of non-string values?
               char *vc = g_strdup_value_contents(val);
               s = caml_copy_string(vc);
               free(vc);

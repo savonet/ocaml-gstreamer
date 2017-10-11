@@ -21,3 +21,4 @@ config.h
 config.h.in
 examples/Makefile.decode
 examples/Makefile.encode
+.*sw*

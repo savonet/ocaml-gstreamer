@@ -1,3 +1,9 @@
+0.2.4 ()
+=====
+* Call get_state when set_state returns an
+  asynchronous state change to block until
+  state has been changed. See: savonet/liquidsoap#483
+
 0.2.3 (2017-04-11)
 =====
 * Added timeout to Bus.timed_pop_filtered.

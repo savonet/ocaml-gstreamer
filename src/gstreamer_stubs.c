@@ -19,19 +19,25 @@
 
 #include <pthread.h>
 
+static pthread_key_t ocaml_c_thread_key;
+static pthread_once_t ocaml_c_thread_key_once = PTHREAD_ONCE_INIT;
+
 static void ocaml_gstreamer_on_thread_exit(void *key) {
   caml_c_thread_unregister();
 }
 
+static void ocaml_gstreamer_make_key() {
+  pthread_key_create(&ocaml_c_thread_key, ocaml_gstreamer_on_thread_exit);
+}
+
 static void ocaml_gstreamer_register_thread() {
-  static pthread_key_t key = (pthread_key_t)NULL;
   static int initialized = 1;
-
-  pthread_key_create(&key, &ocaml_gstreamer_on_thread_exit);
-
   void *ptr;
-  if ((ptr = pthread_getspecific(key)) == NULL) {
-    pthread_setspecific(key,(void*)&initialized);
+  
+  pthread_once(&ocaml_c_thread_key_once, ocaml_gstreamer_make_key);
+
+  if ((ptr = pthread_getspecific(ocaml_c_thread_key)) == NULL) {
+    pthread_setspecific(ocaml_c_thread_key,(void*)&initialized);
     caml_c_thread_register();
   }
 }

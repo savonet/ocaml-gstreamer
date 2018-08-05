@@ -17,6 +17,25 @@
 #include <gst/app/gstappsrc.h>
 #include <gst/app/gstappsink.h>
 
+#include <pthread.h>
+
+static void ocaml_gstreamer_on_thread_exit(void *key) {
+  caml_c_thread_unregister();
+}
+
+static void ocaml_gstreamer_register_thread() {
+  static pthread_key_t key = (pthread_key_t)NULL;
+  static int initialized = 1;
+
+  pthread_key_create(&key, &ocaml_gstreamer_on_thread_exit);
+
+  void *ptr;
+  if ((ptr = pthread_getspecific(key)) == NULL) {
+    pthread_setspecific(key,(void*)&initialized);
+    caml_c_thread_register();
+  }
+}
+
 CAMLprim value ocaml_gstreamer_init(value _argv)
 {
   CAMLparam1(_argv);
@@ -786,7 +805,7 @@ static void disconnect_need_data(appsrc *as)
     }
   if(as->need_data_cb)
     {
-      caml_remove_global_root(&as->need_data_cb);
+      caml_remove_generational_global_root(&as->need_data_cb);
       as->need_data_cb = 0;
     }
 }
@@ -908,11 +927,10 @@ static void appsrc_need_data_cb(GstAppSrc *gas, guint length, gpointer user_data
 {
   appsrc *as = (appsrc*)user_data;
 
-  caml_c_thread_register();
+  ocaml_gstreamer_register_thread();
   caml_acquire_runtime_system();
   caml_callback(as->need_data_cb, Val_int(length));
   caml_release_runtime_system();
-  caml_c_thread_unregister();
 }
 
 CAMLprim value ocaml_gstreamer_appsrc_connect_need_data(value _as, value f)
@@ -921,10 +939,10 @@ CAMLprim value ocaml_gstreamer_appsrc_connect_need_data(value _as, value f)
   appsrc *as = Appsrc_val(_as);
   disconnect_need_data(as);
 
-  caml_register_global_root(&as->need_data_cb);
+  as->need_data_cb = f;
+  caml_register_generational_global_root(&as->need_data_cb);
 
   caml_release_runtime_system();
-  as->need_data_cb = f;
   as->need_data_hid = g_signal_connect(as->appsrc, "need-data", G_CALLBACK(appsrc_need_data_cb), as);
   caml_acquire_runtime_system();
 
@@ -978,7 +996,7 @@ static void disconnect_new_sample(appsink *as)
     }
   if(as->new_sample_cb)
     {
-      caml_remove_global_root(&as->new_sample_cb);
+      caml_remove_generational_global_root(&as->new_sample_cb);
       as->new_sample_cb = 0;
     }
 }
@@ -1099,11 +1117,10 @@ static GstFlowReturn appsink_new_sample_cb(GstAppSink *gas, gpointer user_data)
 {
   appsink *as = (appsink*)user_data;
 
-  caml_c_thread_register();
+  ocaml_gstreamer_register_thread();
   caml_acquire_runtime_system();
   caml_callback(as->new_sample_cb, Val_unit);
   caml_release_runtime_system();
-  caml_c_thread_unregister();
 
   return GST_FLOW_OK;
 }
@@ -1114,10 +1131,10 @@ CAMLprim value ocaml_gstreamer_appsink_connect_new_sample(value _as, value f)
   appsink *as = Appsink_val(_as);
   disconnect_new_sample(as);
 
-  caml_register_global_root(&as->new_sample_cb);
+  as->new_sample_cb = f;
+  caml_register_generational_global_root(&as->new_sample_cb);
 
   caml_release_runtime_system();
-  as->new_sample_cb = f;
   as->new_sample_hid = g_signal_connect(as->appsink, "new-sample", G_CALLBACK(appsink_new_sample_cb), as);
   caml_acquire_runtime_system();
 
@@ -1250,12 +1267,9 @@ static void typefind_element_have_type_cb(GstElement *_typefind, guint probabili
   assert(_typefind);
   assert(caps);
 
-  //For some reason, we segfault if we register the C thread (I guess the implementation is monothreaded?)
-  /* caml_c_thread_register(); */
   caml_acquire_runtime_system();
   caml_callback2(tf->have_type_cb, Val_int(probability), value_of_caps(caps));
   caml_release_runtime_system();
-  /* caml_c_thread_unregister(); */
 }
 
 CAMLprim value ocaml_gstreamer_typefind_element_connect_have_type(value _tf, value f)

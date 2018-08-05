@@ -3,6 +3,7 @@
 * Call get_state when set_state returns an
   asynchronous state change to block until
   state has been changed. See: savonet/liquidsoap#483
+* Cleanup C thread management.
 
 0.2.3 (2017-04-11)
 =====

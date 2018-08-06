@@ -1,6 +1,7 @@
 0.2.4 ()
 =====
 * Cleanup C thread management.
+* Call gst_buffer_ref before passing buffer to the app src.
 
 0.2.3 (2017-04-11)
 =====

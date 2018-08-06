@@ -878,6 +878,8 @@ CAMLprim value ocaml_gstreamer_appsrc_push_buffer_string(value _as, value _buf)
 
   caml_release_runtime_system();
   gst_buffer_unmap(gstbuf, &map);
+  /* The reference will be eaten by push_buffer */
+  gst_buffer_ref(gstbuf);
   ret = gst_app_src_push_buffer(as->appsrc, gstbuf);
   caml_acquire_runtime_system();
 
@@ -922,6 +924,8 @@ CAMLprim value ocaml_gstreamer_appsrc_push_buffer_data(value _as, value _buf)
 
   caml_release_runtime_system();
   gst_buffer_unmap(gstbuf, &map);
+  /* The reference will be eaten by push_buffer */
+  gst_buffer_ref(gstbuf);
   ret = gst_app_src_push_buffer(as->appsrc, gstbuf);
   caml_acquire_runtime_system();
 

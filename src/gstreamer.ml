@@ -72,14 +72,6 @@ module Element = struct
 
   external get_state : t -> state_change * state * state = "ocaml_gstreamer_element_get_state"
 
-  (* Block during asynchronous state changes. *)
-  let set_state el state =
-    match set_state el state with
-      | State_change_async ->
-          let (state, _, _) = get_state el in
-          state
-      | state -> state
-
   external link : t -> t -> unit = "ocaml_gstreamer_element_link"
 
   let link_many ee =

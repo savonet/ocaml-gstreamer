@@ -875,6 +875,8 @@ CAMLprim value ocaml_gstreamer_appsrc_push_buffer(value _as, value _buf)
   GstFlowReturn ret;
 
   caml_release_runtime_system();
+  /* We can to keep ownership over this buffer after it's been pushed. */
+  gst_buffer_ref(gstbuf);
   ret = gst_app_src_push_buffer(as->appsrc, gstbuf);
   caml_acquire_runtime_system();
 

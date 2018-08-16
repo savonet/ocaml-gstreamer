@@ -197,9 +197,15 @@ module App_src = struct
 
   external push_buffer : t -> Buffer.t -> unit = "ocaml_gstreamer_appsrc_push_buffer"
 
-  external push_buffer_string : t -> string -> unit = "ocaml_gstreamer_appsrc_push_buffer_string"
+  external push_buffer_bytes : t -> Int64.t -> Int64.t -> bytes -> int -> int -> unit = "ocaml_gstreamer_appsrc_push_buffer_bytes_b" "ocaml_gstreamer_appsrc_push_buffer_bytes_n"
 
-  external push_buffer_data : t -> data -> unit = "ocaml_gstreamer_appsrc_push_buffer_data"
+  let push_buffer_bytes src ?(presentation_time=Int64.minus_one) ?(duration=Int64.minus_one) data ofs len =
+    push_buffer_bytes src presentation_time duration data ofs len
+
+  external push_buffer_data : t -> Int64.t -> Int64.t -> data -> int -> int -> unit = "ocaml_gstreamer_appsrc_push_buffer_data_b" "ocaml_gstreamer_appsrc_push_buffer_bytes_n"
+
+  let push_buffer_data src ?(presentation_time=Int64.minus_one) ?(duration=Int64.minus_one) data ofs len =
+    push_buffer_data src presentation_time duration data ofs len
 
   external on_need_data : t -> (int -> unit) -> unit = "ocaml_gstreamer_appsrc_connect_need_data"
 

@@ -223,11 +223,11 @@ module App_src : sig
   (** Push a buffer. *)
   val push_buffer : t -> Buffer.t -> unit
 
-  (** Push a buffer in string format. *)
-  val push_buffer_string : t -> string -> unit
+  (** Push a buffer in bytes format. *)
+  val push_buffer_bytes : t -> ?presentation_time:Int64.t -> ?duration:Int64.t -> bytes -> int -> int -> unit
 
   (** Push a buffer in data format. *)
-  val push_buffer_data : t -> data -> unit
+  val push_buffer_data : t -> ?presentation_time:Int64.t -> ?duration:Int64.t -> data -> int -> int -> unit
 
   (** Register a callback that will be called when data need to be fed into the
       source (the argument is the number of bytes needed by the source). *)

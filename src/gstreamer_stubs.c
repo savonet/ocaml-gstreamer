@@ -844,27 +844,42 @@ CAMLprim value ocaml_gstreamer_appsrc_to_element(value _as)
   CAMLreturn(value_of_element(GST_ELEMENT(as->appsrc)));
 }
 
-CAMLprim value ocaml_gstreamer_appsrc_push_buffer_string(value _as, value _buf)
+CAMLprim value ocaml_gstreamer_appsrc_push_buffer_bytes_n(value _as, value _pres_time, value _dur, value _buf, value _ofs, value _len)
 {
-  CAMLparam2(_as, _buf);
-  int buflen = caml_string_length(_buf);
+  CAMLparam4(_as, _pres_time, _dur, _buf);
   appsrc *as = Appsrc_val(_as);
   GstBuffer *gstbuf;
   GstFlowReturn ret;
+  int64_t pres_time = Int64_val(_pres_time);
+  int64_t dur = Int64_val(_dur);
 
   caml_release_runtime_system();
-  gstbuf = gst_buffer_new_allocate(NULL, buflen, NULL);
+  gstbuf = gst_buffer_new_allocate(NULL, Int_val(_len), NULL);
   caml_acquire_runtime_system();
 
   if(!gstbuf) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
-  gst_buffer_fill(gstbuf, 0, (const void *)Caml_ba_data_val(_buf), buflen);
+
+  if (pres_time >= 0)
+    gstbuf->pts = pres_time;
+
+  if (dur >= 0)
+    gstbuf->duration = dur;
+
+
+  gst_buffer_fill(gstbuf, 0, (const void *)Bytes_val(_buf)+Int_val(_ofs), Int_val(_len));
 
   caml_release_runtime_system();
-  ret = gst_app_src_push_buffer(as->appsrc, gstbuf);
+  g_signal_emit_by_name(GST_ELEMENT(as->appsrc), "push-buffer", gstbuf, &ret);
+  gst_buffer_unref(gstbuf);
   caml_acquire_runtime_system();
 
   if (ret != GST_FLOW_OK) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
   CAMLreturn(Val_unit);
+}
+
+CAMLprim value ocaml_gstreamer_appsrc_push_buffer_bytes_b(value * argv, int argn)
+{
+  return ocaml_gstreamer_appsrc_push_buffer_bytes_n(argv[0], argv[1], argv[2], argv[3], argv[4], argv[5]);
 }
 
 CAMLprim value ocaml_gstreamer_appsrc_push_buffer(value _as, value _buf)
@@ -875,36 +890,48 @@ CAMLprim value ocaml_gstreamer_appsrc_push_buffer(value _as, value _buf)
   GstFlowReturn ret;
 
   caml_release_runtime_system();
-  /* We can to keep ownership over this buffer after it's been pushed. */
-  gst_buffer_ref(gstbuf);
-  ret = gst_app_src_push_buffer(as->appsrc, gstbuf);
+  g_signal_emit_by_name(GST_ELEMENT(as->appsrc), "push-buffer", gstbuf, &ret);
   caml_acquire_runtime_system();
 
   if (ret != GST_FLOW_OK) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
   CAMLreturn(Val_unit);
 }
 
-CAMLprim value ocaml_gstreamer_appsrc_push_buffer_data(value _as, value _buf)
+CAMLprim value ocaml_gstreamer_appsrc_push_buffer_data_n(value _as, value _pres_time, value _dur, value _buf, value _ofs, value _len)
 {
-  CAMLparam2(_as, _buf);
-  int buflen = Caml_ba_array_val(_buf)->dim[0];
+  CAMLparam4(_as, _pres_time, _dur, _buf);
   appsrc *as = Appsrc_val(_as);
   GstBuffer *gstbuf;
   GstFlowReturn ret;
+  int64_t pres_time = Int64_val(_pres_time);
+  int64_t dur = Int64_val(_dur);
 
   caml_release_runtime_system();
-  gstbuf = gst_buffer_new_allocate(NULL, buflen, NULL);
+  gstbuf = gst_buffer_new_allocate(NULL, Int_val(_len), NULL);
   caml_acquire_runtime_system();
 
   if(!gstbuf) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
-  gst_buffer_fill(gstbuf, 0, (const void *)Caml_ba_data_val(_buf), buflen);
+
+  if (pres_time >= 0)
+    gstbuf->pts = pres_time;
+
+  if (dur >= 0)
+    gstbuf->duration = dur;
+
+  gst_buffer_fill(gstbuf, 0, (const void *)Caml_ba_data_val(_buf)+Int_val(_ofs), Int_val(_len));
 
   caml_release_runtime_system();
-  ret = gst_app_src_push_buffer(as->appsrc, gstbuf);
+  g_signal_emit_by_name(GST_ELEMENT(as->appsrc), "push-buffer", gstbuf, &ret);
+  gst_buffer_unref(gstbuf);
   caml_acquire_runtime_system();
 
   if (ret != GST_FLOW_OK) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
   CAMLreturn(Val_unit);
+}
+
+CAMLprim value ocaml_gstreamer_appsrc_push_buffer_data_b(value * argv, int argn)
+{
+  return ocaml_gstreamer_appsrc_push_buffer_data_n(argv[0], argv[1], argv[2], argv[3], argv[4], argv[5]);
 }
 
 static void appsrc_need_data_cb(GstAppSrc *gas, guint length, gpointer user_data)

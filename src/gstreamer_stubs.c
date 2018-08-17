@@ -1113,6 +1113,8 @@ CAMLprim value ocaml_gstreamer_appsink_pull_buffer(value _as, value string_mode)
   ret = gst_buffer_map(gstbuf, &map, GST_MAP_READ);
   caml_acquire_runtime_system();
 
+  if (!ret) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
+
   len = map.size;
   if (string_mode == Val_false) {
     ans = caml_ba_alloc(CAML_BA_C_LAYOUT | CAML_BA_UINT8, 1, NULL, &len);

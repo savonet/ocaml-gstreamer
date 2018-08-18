@@ -155,9 +155,23 @@ module Message : sig
   val parse_tag : t -> (string * string list) list
 end
 
+module Context : sig
+  type t
+
+  val default : unit -> t
+
+  val create : unit -> t
+
+  val iterate : may_block:bool -> t -> unit
+
+  val pending : t -> bool
+end
+
 (** Buses. *)
 module Bus : sig
   type t
+
+  val attach_context : t -> Context.t -> unit
 
   val of_element : Element.t -> t
 

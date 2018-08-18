@@ -11,6 +11,7 @@
 #include <assert.h>
 #include <stdio.h>
 
+#include <glib.h>
 #include <gst/gst.h>
 #include <gst/gstclock.h>
 #include <gst/gsttypefind.h>
@@ -502,6 +503,81 @@ CAMLprim value ocaml_gstreamer_message_parse_tag(value _msg)
   CAMLreturn(ans);
 }
 
+/**** Context ****/
+
+#define Context_val(v) (*(GMainContext **)Data_custom_val(v))
+
+static void finalize_context(value v)
+{
+  GMainContext *context = Context_val(v);
+  g_main_context_unref(context);
+}
+
+static struct custom_operations context_ops =
+  {
+    "ocaml_gstreamer_context",
+    finalize_context,
+    custom_compare_default,
+    custom_hash_default,
+    custom_serialize_default,
+    custom_deserialize_default
+  };
+
+CAMLprim value ocaml_gstreamer_context_default(value unit)
+{
+  CAMLparam0();
+  CAMLlocal1(ans);
+
+  ans = caml_alloc_custom(&context_ops, sizeof(GMainContext*), 0, 1);
+  Context_val(ans) = g_main_context_default();
+
+  CAMLreturn(ans);
+}
+
+CAMLprim value ocaml_gstreamer_context_create(value unit)
+{
+  CAMLparam0();
+  CAMLlocal1(ans);
+  GMainContext *context;
+
+  context = g_main_context_new();
+  if (context == NULL)
+    caml_raise_out_of_memory();
+
+  ans = caml_alloc_custom(&context_ops, sizeof(GMainContext*), 0, 1);
+  Context_val(ans) = context;
+
+  CAMLreturn(ans);
+}
+
+CAMLprim value ocaml_gstreamer_context_iterate(value blocking, value context)
+{
+  CAMLparam1(context);
+  gboolean may_block, ret;
+
+  if (Bool_val(blocking) == 1)
+    may_block = TRUE;
+  else
+    may_block = FALSE;
+
+  ret = g_main_context_iteration(Context_val(context),may_block);
+
+  if (ret == TRUE)
+    CAMLreturn(Val_true);
+  else
+    CAMLreturn(Val_false);
+}
+
+CAMLprim value ocaml_gstreamer_context_pending(value context)
+{
+  CAMLparam1(context);
+
+  if (g_main_context_pending(Context_val(context)) == TRUE)
+    CAMLreturn(Val_true);
+  else
+    CAMLreturn(Val_false);
+}
+
 /**** Bus ****/
 
 #define Bus_val(v) (*(GstBus**)Data_custom_val(v))
@@ -522,6 +598,18 @@ static struct custom_operations bus_ops =
     custom_deserialize_default
   };
 
+CAMLprim value ocaml_gstreamer_bus_attach_context(value b, value c)
+{
+  CAMLparam2(b,c);
+  
+  GSource *source = gst_bus_create_watch(Bus_val(b));
+  g_source_set_callback(source, (GSourceFunc) gst_bus_async_signal_func, NULL, NULL);
+  g_source_attach(source,Context_val(c));
+  g_source_unref(source);
+
+  CAMLreturn(Val_unit);
+}
+
 CAMLprim value ocaml_gstreamer_bus_of_element(value _e)
 {
   CAMLparam1(_e);
@@ -529,7 +617,7 @@ CAMLprim value ocaml_gstreamer_bus_of_element(value _e)
   GstElement *e = Element_val(_e);
 
   ans = caml_alloc_custom(&bus_ops, sizeof(GstBus*), 0, 1);
-  Bus_val(ans) = gst_element_get_bus(e);;
+  Bus_val(ans) = gst_element_get_bus(e);
 
   CAMLreturn(ans);
 }

@@ -141,10 +141,24 @@ module Message = struct
     Array.to_list tags
 end
 
+module Context = struct
+  type t
+
+  external default : unit -> t = "ocaml_gstreamer_context_default"
+
+  external create : unit -> t = "ocaml_gstreamer_context_create"
+
+  external iterate : may_block:bool -> t -> unit = "ocaml_gstreamer_context_iterate"
+
+  external pending : t -> bool = "ocaml_gstreamer_context_pending"
+end
+
 module Bus = struct
   type t
 
   external of_element : Element.t -> t = "ocaml_gstreamer_bus_of_element"
+
+  external attach_context : t -> Context.t -> unit = "ocaml_gstreamer_bus_attach_context"
 
   external pop_filtered : t -> Message.message_type array -> Message.t option = "ocaml_gstreamer_bus_pop_filtered"
   let pop_filtered bus filter = pop_filtered bus (Array.of_list filter)

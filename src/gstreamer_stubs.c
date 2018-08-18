@@ -646,15 +646,14 @@ CAMLprim value ocaml_gstreamer_pipeline_create(value s)
 CAMLprim value ocaml_gstreamer_pipeline_parse_launch(value s)
 {
   CAMLparam1(s);
-  CAMLlocal1(ans);
+  CAMLlocal2(ans,_err);
   GError *err = NULL;
   GstElement *e;
 
   e = gst_parse_launch(String_val(s), &err);
-  if (err)
+  if (err && e == NULL)
     {
-      value s = caml_copy_string(err->message);
-      if (e) { gst_object_unref(e); }
+      _err = caml_copy_string(err->message);
       g_error_free(err);
       caml_raise_with_arg(*caml_named_value("gstreamer_exn_failure_msg"), s);
     }
@@ -885,8 +884,7 @@ CAMLprim value ocaml_gstreamer_appsrc_push_buffer_bytes_n(value _as, value _pres
   buffer_fill(gstbuf, data, Int_val(_ofs), Int_val(_len));
 
   caml_release_runtime_system();
-  g_signal_emit_by_name(GST_ELEMENT(as->appsrc), "push-buffer", gstbuf, &ret);
-  gst_buffer_unref(gstbuf);
+  ret = gst_app_src_push_buffer(as->appsrc,gstbuf);
   caml_acquire_runtime_system();
 
   if (ret != GST_FLOW_OK) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
@@ -939,8 +937,7 @@ CAMLprim value ocaml_gstreamer_appsrc_push_buffer_data_n(value _as, value _pres_
   buffer_fill(gstbuf, data, Int_val(_ofs), Int_val(_len));
 
   caml_release_runtime_system();
-  g_signal_emit_by_name(GST_ELEMENT(as->appsrc), "push-buffer", gstbuf, &ret);
-  gst_buffer_unref(gstbuf);
+  ret = gst_app_src_push_buffer(as->appsrc,gstbuf);
   caml_acquire_runtime_system();
 
   if (ret != GST_FLOW_OK) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));

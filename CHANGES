@@ -3,7 +3,6 @@
 * Add smarter buffer API to avoid copies.
 * Cleanup C thread management.
 * Cleanup gst_buf management.
-* Added context API.
 
 0.2.3 (2017-04-11)
 =====

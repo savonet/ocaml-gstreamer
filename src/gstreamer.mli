@@ -1,8 +1,8 @@
-(** A failure occured. *)
-exception Failure
-(** A failure occured (with given explanation). *)
-exception Failure_msg of string
+(** An error occured (with given explanation). *)
+exception Error of string
 exception Timeout
+exception Stopped
+exception Failed
 (** Trying to read data from a stream which has ended. *)
 exception End_of_stream
 
@@ -109,75 +109,91 @@ module Element_factory : sig
   val make : string -> string -> t
 end
 
-(** Messages. *)
-module Message : sig
-  type message_type =
-  | Unknown
-  | End_of_stream
-  | Error
-  | Warning
-  | Info
-  | Tag
-  | Buffering
-  | State_changed
-  | State_dirty
-  | Step_done
-  | Clock_provide
-  | Clock_lost
-  | New_clock
-  | Structure_change
-  | Stream_status
-  | Application
-  | Element
-  | Segment_start
-  | Segment_done
-  | Duration_changed
-  | Latency
-  | Async_start
-  | Async_done
-  | Request_state
-  | Step_start
-  | Qos
-  | Progress
-  | Toc
-  | Reset_time
-  | Stream_start
-  | Need_context
-  | Have_context
-  | Any
-
-  type t
-
-  val message_type : t -> message_type
-
-  val source_name : t -> string
-
-  val parse_tag : t -> (string * string list) list
-end
-
-module Context : sig
-  type t
-
-  val default : unit -> t
-
-  val create : unit -> t
-
-  val iterate : may_block:bool -> t -> unit
-
-  val pending : t -> bool
-end
-
 (** Buses. *)
 module Bus : sig
   type t
 
-  val attach_context : t -> Context.t -> unit
+  type message_type = [
+    | `Unknown
+    | `End_of_stream
+    | `Error
+    | `Warning
+    | `Info
+    | `Tag
+    | `Buffering
+    | `State_changed
+    | `State_dirty
+    | `Step_done
+    | `Clock_provide
+    | `Clock_lost
+    | `New_clock
+    | `Structure_change
+    | `Stream_status
+    | `Application
+    | `Element
+    | `Segment_start
+    | `Segment_done
+    | `Duration_changed
+    | `Latency
+    | `Async_start
+    | `Async_done
+    | `Request_state
+    | `Step_start
+    | `Qos
+    | `Progress
+    | `Toc
+    | `Reset_time
+    | `Stream_start
+    | `Need_context
+    | `Have_context
+    | `Any
+  ]
+
+  type message_payload = [
+    | `Unknown
+    | `End_of_stream
+    | `Error of string
+    | `Warning of string
+    | `Info of string
+    | `Tag of (string*string list) list
+    | `Buffering of int
+    | `State_changed of (Element.state*Element.state*Element.state)
+    | `State_dirty
+    | `Step_done
+    | `Clock_provide
+    | `Clock_lost
+    | `New_clock
+    | `Structure_change
+    | `Stream_status
+    | `Application
+    | `Element
+    | `Segment_start
+    | `Segment_done
+    | `Duration_changed
+    | `Latency
+    | `Async_start
+    | `Async_done
+    | `Request_state
+    | `Step_start
+    | `Qos
+    | `Progress
+    | `Toc
+    | `Reset_time
+    | `Stream_start
+    | `Need_context
+    | `Have_context
+  ]
+
+  type message = {
+    source:  string;
+    payload: message_payload
+  }
 
   val of_element : Element.t -> t
 
-  val pop_filtered : t -> Message.message_type list -> Message.t option
+  val pop_filtered : t -> message_type list -> message option
 
-  val timed_pop_filtered : t -> ?timeout:Int64.t -> Message.message_type list -> Message.t
+  val timed_pop_filtered : t -> ?timeout:Int64.t -> message_type list -> message
 end
 
 (** Bins. *)

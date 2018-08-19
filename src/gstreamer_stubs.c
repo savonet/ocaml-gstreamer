@@ -214,7 +214,7 @@ static value value_of_state_change_return(GstStateChangeReturn ret)
   switch(ret)
     {
     case GST_STATE_CHANGE_FAILURE:
-      caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
+      caml_raise_constant(*caml_named_value("gstreamer_exn_failed"));
 
     case GST_STATE_CHANGE_SUCCESS:
       return Val_int(0);
@@ -281,7 +281,7 @@ CAMLprim value ocaml_gstreamer_element_link(value _src, value _dst)
   ret = gst_element_link(src, dst);
   caml_acquire_runtime_system();
 
-  if (!ret) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
+  if (!ret) caml_raise_constant(*caml_named_value("gstreamer_exn_failed"));
   CAMLreturn(Val_unit);
 }
 
@@ -297,7 +297,7 @@ CAMLprim value ocaml_gstreamer_element_position(value _e, value _fmt)
   ret = gst_element_query_position(e, fmt, &pos);
   caml_acquire_runtime_system();
 
-  if (!ret) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
+  if (!ret) caml_raise_constant(*caml_named_value("gstreamer_exn_failed"));
   CAMLreturn(caml_copy_int64(pos));
 }
 
@@ -313,7 +313,7 @@ CAMLprim value ocaml_gstreamer_element_duration(value _e, value _fmt)
   ret = gst_element_query_duration(e, fmt, &dur);
   caml_acquire_runtime_system();
 
-  if (!ret) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
+  if (!ret) caml_raise_constant(*caml_named_value("gstreamer_exn_failed"));
   CAMLreturn(caml_copy_int64(dur));
 }
 
@@ -334,7 +334,7 @@ CAMLprim value ocaml_gstreamer_element_seek_simple(value _e, value _fmt, value _
   ret = gst_element_seek_simple(e, fmt, flags, pos);
   caml_acquire_runtime_system();
 
-  if (!ret) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
+  if (!ret) caml_raise_constant(*caml_named_value("gstreamer_exn_failed"));
   CAMLreturn(Val_unit);
 }
 
@@ -427,7 +427,6 @@ static struct custom_operations message_ops =
   };
 
 #define value_of_message(msg, ans) \
-  if (!msg) caml_raise_constant(*caml_named_value("gstreamer_exn_failure")); \
   ans = caml_alloc_custom(&message_ops, sizeof(GstMessage*), 0, 1); \
   Message_val(ans) = msg;
 
@@ -443,6 +442,44 @@ CAMLprim value ocaml_gstreamer_message_source_name(value _msg)
   CAMLparam1(_msg);
   GstMessage *msg = Message_val(_msg);
   CAMLreturn(caml_copy_string(GST_MESSAGE_SRC_NAME(msg)));
+}
+
+CAMLprim value ocaml_gstreamer_message_parse_error(value _err)
+{
+  CAMLparam1(_err);
+  CAMLlocal1(ans);
+  GError *err = NULL;
+
+  gst_message_parse_error(Message_val(_err), &err, NULL);
+
+  ans = caml_copy_string(err->message);
+  g_error_free(err);
+  
+  CAMLreturn(ans);
+}
+
+CAMLprim value ocaml_gstreamer_message_parse_buffering(value _msg)
+{
+  CAMLparam1(_msg);
+  gint percent;
+  gst_message_parse_buffering(Message_val(_msg), &percent);
+  CAMLreturn(Val_int(percent));
+}
+
+CAMLprim value ocaml_gstreamer_message_parse_state_changed(value _msg)
+{
+  CAMLparam1(_msg);
+  CAMLlocal1(ans);
+  GstState old_state, new_state, pending;
+
+  gst_message_parse_state_changed(Message_val(_msg), &old_state, &new_state, &pending);
+
+  ans = caml_alloc_tuple(3);
+  Store_field(ans, 0, val_of_state(old_state));
+  Store_field(ans, 1, val_of_state(new_state));
+  Store_field(ans, 2, val_of_state(pending));
+
+  CAMLreturn(ans);
 }
 
 CAMLprim value ocaml_gstreamer_message_parse_tag(value _msg)
@@ -503,81 +540,6 @@ CAMLprim value ocaml_gstreamer_message_parse_tag(value _msg)
   CAMLreturn(ans);
 }
 
-/**** Context ****/
-
-#define Context_val(v) (*(GMainContext **)Data_custom_val(v))
-
-static void finalize_context(value v)
-{
-  GMainContext *context = Context_val(v);
-  g_main_context_unref(context);
-}
-
-static struct custom_operations context_ops =
-  {
-    "ocaml_gstreamer_context",
-    finalize_context,
-    custom_compare_default,
-    custom_hash_default,
-    custom_serialize_default,
-    custom_deserialize_default
-  };
-
-CAMLprim value ocaml_gstreamer_context_default(value unit)
-{
-  CAMLparam0();
-  CAMLlocal1(ans);
-
-  ans = caml_alloc_custom(&context_ops, sizeof(GMainContext*), 0, 1);
-  Context_val(ans) = g_main_context_default();
-
-  CAMLreturn(ans);
-}
-
-CAMLprim value ocaml_gstreamer_context_create(value unit)
-{
-  CAMLparam0();
-  CAMLlocal1(ans);
-  GMainContext *context;
-
-  context = g_main_context_new();
-  if (context == NULL)
-    caml_raise_out_of_memory();
-
-  ans = caml_alloc_custom(&context_ops, sizeof(GMainContext*), 0, 1);
-  Context_val(ans) = context;
-
-  CAMLreturn(ans);
-}
-
-CAMLprim value ocaml_gstreamer_context_iterate(value blocking, value context)
-{
-  CAMLparam1(context);
-  gboolean may_block, ret;
-
-  if (Bool_val(blocking) == 1)
-    may_block = TRUE;
-  else
-    may_block = FALSE;
-
-  ret = g_main_context_iteration(Context_val(context),may_block);
-
-  if (ret == TRUE)
-    CAMLreturn(Val_true);
-  else
-    CAMLreturn(Val_false);
-}
-
-CAMLprim value ocaml_gstreamer_context_pending(value context)
-{
-  CAMLparam1(context);
-
-  if (g_main_context_pending(Context_val(context)) == TRUE)
-    CAMLreturn(Val_true);
-  else
-    CAMLreturn(Val_false);
-}
-
 /**** Bus ****/
 
 #define Bus_val(v) (*(GstBus**)Data_custom_val(v))
@@ -597,18 +559,6 @@ static struct custom_operations bus_ops =
     custom_serialize_default,
     custom_deserialize_default
   };
-
-CAMLprim value ocaml_gstreamer_bus_attach_context(value b, value c)
-{
-  CAMLparam2(b,c);
-  
-  GSource *source = gst_bus_create_watch(Bus_val(b));
-  g_source_set_callback(source, (GSourceFunc) gst_bus_async_signal_func, NULL, NULL);
-  g_source_attach(source,Context_val(c));
-  g_source_unref(source);
-
-  CAMLreturn(Val_unit);
-}
 
 CAMLprim value ocaml_gstreamer_bus_of_element(value _e)
 {
@@ -696,7 +646,7 @@ CAMLprim value ocaml_gstreamer_bin_add(value _bin, value _e)
   ret = gst_bin_add(bin, e);
   caml_acquire_runtime_system();
 
-  if (!ret) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
+  if (!ret) caml_raise_constant(*caml_named_value("gstreamer_exn_failed"));
   CAMLreturn(Val_unit);
 }
 
@@ -743,7 +693,7 @@ CAMLprim value ocaml_gstreamer_pipeline_parse_launch(value s)
     {
       _err = caml_copy_string(err->message);
       g_error_free(err);
-      caml_raise_with_arg(*caml_named_value("gstreamer_exn_failure_msg"), s);
+      caml_raise_with_arg(*caml_named_value("gstreamer_exn_error"), _err);
     }
 
   value_of_element(e,ans);
@@ -772,7 +722,6 @@ static struct custom_operations buffer_ops =
   };
 
 #define value_of_buffer(b,ans) \
-  if (!b) caml_raise_constant(*caml_named_value("gstreamer_exn_failure")); \
   ans = caml_alloc_custom(&buffer_ops, sizeof(GstElement*), 0, 1); \
   Buffer_val(ans) = b;
 
@@ -782,7 +731,7 @@ static struct custom_operations buffer_ops =
   caml_release_runtime_system(); \
   bret = gst_buffer_map(gstbuf, &map, GST_MAP_WRITE); \
   caml_acquire_runtime_system(); \
-  if(!bret) caml_raise_constant(*caml_named_value("gstreamer_exn_failure")); \
+  if(!bret) caml_raise_out_of_memory(); \
   memcpy(map.data, (unsigned char*)data+ofs, len);\
   caml_release_runtime_system(); \
   gst_buffer_unmap(gstbuf, &map); \
@@ -805,7 +754,7 @@ CAMLprim value ocaml_gstreamer_buffer_of_string(value s, value _off, value _len)
   gstbuf = gst_buffer_new_allocate(NULL, buflen, NULL);
   caml_acquire_runtime_system();
 
-  if(!gstbuf) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
+  if(!gstbuf) caml_raise_out_of_memory();
 
   data = String_val(s);
   buffer_fill(gstbuf, data, bufoff, buflen);
@@ -831,7 +780,7 @@ CAMLprim value ocaml_gstreamer_buffer_of_data(value _ba, value _off, value _len)
   gstbuf = gst_buffer_new_allocate(NULL, buflen, NULL);
   caml_acquire_runtime_system();
 
-  if(!gstbuf) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
+  if(!gstbuf) caml_raise_out_of_memory();
 
   data = Caml_ba_data_val(_ba);
   buffer_fill(gstbuf, data, bufoff, buflen);
@@ -960,7 +909,7 @@ CAMLprim value ocaml_gstreamer_appsrc_push_buffer_bytes_n(value _as, value _pres
   gstbuf = gst_buffer_new_allocate(NULL, Int_val(_len), NULL);
   caml_acquire_runtime_system();
 
-  if(!gstbuf) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
+  if(!gstbuf) caml_raise_out_of_memory();
 
   if (pres_time >= 0)
     gstbuf->pts = pres_time;
@@ -975,7 +924,7 @@ CAMLprim value ocaml_gstreamer_appsrc_push_buffer_bytes_n(value _as, value _pres
   ret = gst_app_src_push_buffer(as->appsrc,gstbuf);
   caml_acquire_runtime_system();
 
-  if (ret != GST_FLOW_OK) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
+  if (ret != GST_FLOW_OK) caml_raise_constant(*caml_named_value("gstreamer_exn_failed"));
   CAMLreturn(Val_unit);
 }
 
@@ -995,7 +944,7 @@ CAMLprim value ocaml_gstreamer_appsrc_push_buffer(value _as, value _buf)
   g_signal_emit_by_name(GST_ELEMENT(as->appsrc), "push-buffer", gstbuf, &ret);
   caml_acquire_runtime_system();
 
-  if (ret != GST_FLOW_OK) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
+  if (ret != GST_FLOW_OK) caml_raise_constant(*caml_named_value("gstreamer_exn_failed"));
   CAMLreturn(Val_unit);
 }
 
@@ -1013,7 +962,7 @@ CAMLprim value ocaml_gstreamer_appsrc_push_buffer_data_n(value _as, value _pres_
   gstbuf = gst_buffer_new_allocate(NULL, Int_val(_len), NULL);
   caml_acquire_runtime_system();
 
-  if(!gstbuf) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
+  if(!gstbuf) caml_raise_out_of_memory();
 
   if (pres_time >= 0)
     gstbuf->pts = pres_time;
@@ -1028,7 +977,7 @@ CAMLprim value ocaml_gstreamer_appsrc_push_buffer_data_n(value _as, value _pres_
   ret = gst_app_src_push_buffer(as->appsrc,gstbuf);
   caml_acquire_runtime_system();
 
-  if (ret != GST_FLOW_OK) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
+  if (ret != GST_FLOW_OK) caml_raise_constant(*caml_named_value("gstreamer_exn_failed"));
   CAMLreturn(Val_unit);
 }
 
@@ -1060,7 +1009,7 @@ CAMLprim value ocaml_gstreamer_appsrc_connect_need_data(value _as, value f)
   as->need_data_hid = g_signal_connect(as->appsrc, "need-data", G_CALLBACK(appsrc_need_data_cb), as);
   caml_acquire_runtime_system();
 
-  if(!as->need_data_hid) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
+  if(!as->need_data_hid) caml_raise_constant(*caml_named_value("gstreamer_exn_failed"));
   CAMLreturn(Val_unit);
 }
 
@@ -1074,7 +1023,7 @@ CAMLprim value ocaml_gstreamer_appsrc_end_of_stream(value _as)
   g_signal_emit_by_name(as->appsrc, "end-of-stream", &ret);
   caml_acquire_runtime_system();
 
-  if(ret != GST_FLOW_OK) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
+  if(ret != GST_FLOW_OK) caml_raise_constant(*caml_named_value("gstreamer_exn_failed"));
   CAMLreturn(Val_unit);
 }
 
@@ -1185,20 +1134,20 @@ CAMLprim value ocaml_gstreamer_appsink_pull_buffer(value _as, value string_mode)
       if (gst_app_sink_is_eos(as->appsink))
         caml_raise_constant(*caml_named_value("gstreamer_exn_eos"));
       else
-        caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
+        caml_raise_constant(*caml_named_value("gstreamer_exn_stopped"));
     }
 
   caml_release_runtime_system();
   gstbuf = gst_sample_get_buffer(gstsample);
   caml_acquire_runtime_system();
 
-  if (!gstbuf) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
+  if (!gstbuf) caml_raise_out_of_memory();
 
   caml_release_runtime_system();
   ret = gst_buffer_map(gstbuf, &map, GST_MAP_READ);
   caml_acquire_runtime_system();
 
-  if (!ret) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
+  if (!ret) caml_raise_out_of_memory();
 
   len = map.size;
   if (string_mode == Val_false) {
@@ -1255,7 +1204,7 @@ CAMLprim value ocaml_gstreamer_appsink_connect_new_sample(value _as, value f)
   as->new_sample_hid = g_signal_connect(as->appsink, "new-sample", G_CALLBACK(appsink_new_sample_cb), as);
   caml_acquire_runtime_system();
 
-  if (!as->new_sample_hid) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
+  if (!as->new_sample_hid) caml_raise_constant(*caml_named_value("gstreamer_exn_failed"));
   CAMLreturn(Val_unit);
 }
 
@@ -1294,7 +1243,6 @@ static struct custom_operations caps_ops =
 
 static value value_of_caps(GstCaps *c)
 {
-  if (!c) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
   value ans = caml_alloc_custom(&caps_ops, sizeof(GstCaps*), 0, 1);
   Caps_val(ans) = c;
   return ans;
@@ -1402,7 +1350,7 @@ CAMLprim value ocaml_gstreamer_typefind_element_connect_have_type(value _tf, val
   tf->have_type_hid = g_signal_connect(tf->tf, "have-type", G_CALLBACK(typefind_element_have_type_cb), tf);
   caml_acquire_runtime_system();
 
-  if (!tf->have_type_hid) caml_raise_constant(*caml_named_value("gstreamer_exn_failure"));
+  if (!tf->have_type_hid) caml_raise_constant(*caml_named_value("gstreamer_exn_failed"));
   CAMLreturn(Val_unit);
 }
 

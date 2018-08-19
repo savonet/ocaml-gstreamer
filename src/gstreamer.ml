@@ -1,12 +1,14 @@
-exception Failure
-exception Failure_msg of string
+exception Error of string
+exception Stopped
 exception Timeout
+exception Failed
 exception End_of_stream
 
 let () =
-  Callback.register_exception "gstreamer_exn_failure" Failure;
-  Callback.register_exception "gstreamer_exn_failure_msg" (Failure_msg "");
+  Callback.register_exception "gstreamer_exn_error_msg" (Error "");
+  Callback.register_exception "gstreamer_exn_stopped" Stopped;
   Callback.register_exception "gstreamer_exn_timeout" Timeout;
+  Callback.register_exception "gstreamer_exn_failed" Failed;
   Callback.register_exception "gstreamer_exn_eos" End_of_stream
 
 external init : (string array) option -> unit = "ocaml_gstreamer_init"
@@ -94,41 +96,76 @@ end
 
 module Message = struct
   type message_type =
-  | Unknown
-  | End_of_stream
-  | Error
-  | Warning
-  | Info
-  | Tag
-  | Buffering
-  | State_changed
-  | State_dirty
-  | Step_done
-  | Clock_provide
-  | Clock_lost
-  | New_clock
-  | Structure_change
-  | Stream_status
-  | Application
-  | Element
-  | Segment_start
-  | Segment_done
-  | Duration_changed
-  | Latency
-  | Async_start
-  | Async_done
-  | Request_state
-  | Step_start
-  | Qos
-  | Progress
-  | Toc
-  | Reset_time
-  | Stream_start
-  | Need_context
-  | Have_context
-  | Any
+    | Unknown
+    | End_of_stream
+    | Error
+    | Warning
+    | Info
+    | Tag
+    | Buffering
+    | State_changed
+    | State_dirty
+    | Step_done
+    | Clock_provide
+    | Clock_lost
+    | New_clock
+    | Structure_change
+    | Stream_status
+    | Application
+    | Element
+    | Segment_start
+    | Segment_done
+    | Duration_changed
+    | Latency
+    | Async_start
+    | Async_done
+    | Request_state
+    | Step_start
+    | Qos
+    | Progress
+    | Toc
+    | Reset_time
+    | Stream_start
+    | Need_context
+    | Have_context
+    | Any
 
   type t
+
+  type msg = [
+    | `Unknown
+    | `End_of_stream
+    | `Error of string
+    | `Warning of string
+    | `Info of string
+    | `Tag of (string*string list) list
+    | `Buffering of int
+    | `State_changed of (Element.state*Element.state*Element.state)
+    | `State_dirty
+    | `Step_done
+    | `Clock_provide
+    | `Clock_lost
+    | `New_clock
+    | `Structure_change
+    | `Stream_status
+    | `Application
+    | `Element
+    | `Segment_start
+    | `Segment_done
+    | `Duration_changed
+    | `Latency
+    | `Async_start
+    | `Async_done
+    | `Request_state
+    | `Step_start
+    | `Qos
+    | `Progress
+    | `Toc
+    | `Reset_time
+    | `Stream_start
+    | `Need_context
+    | `Have_context
+  ]
 
   external message_type : t -> message_type = "ocaml_gstreamer_message_type"
 
@@ -139,32 +176,157 @@ module Message = struct
     let tags = parse_tag msg in
     let tags = Array.map (fun (l,v) -> l, Array.to_list v) tags in
     Array.to_list tags
-end
 
-module Context = struct
-  type t
+  external parse_error : t -> string = "ocaml_gstreamer_message_parse_error"
 
-  external default : unit -> t = "ocaml_gstreamer_context_default"
+  external parse_state_changed : t -> Element.state*Element.state*Element.state = "ocaml_gstreamer_message_parse_state_changed"
 
-  external create : unit -> t = "ocaml_gstreamer_context_create"
+  external parse_buffering : t -> int = "ocaml_gstreamer_message_parse_buffering"
 
-  external iterate : may_block:bool -> t -> unit = "ocaml_gstreamer_context_iterate"
-
-  external pending : t -> bool = "ocaml_gstreamer_context_pending"
+  let message_of_msg msg =
+    match message_type msg with
+      | Unknown -> `Unknown
+      | End_of_stream -> `End_of_stream
+      | Error -> `Error (parse_error msg)
+      | Warning -> `Warning (parse_error msg)
+      | Info -> `Info (parse_error msg)
+      | Tag -> `Tag (parse_tag msg)
+      | Buffering -> `Buffering (parse_buffering msg)
+      | State_changed -> `State_changed (parse_state_changed msg)
+      | State_dirty -> `State_dirty
+      | Step_done -> `Step_done
+      | Clock_provide -> `Clock_provide
+      | Clock_lost -> `Clock_lost
+      | New_clock -> `New_clock
+      | Structure_change -> `Structure_change
+      | Stream_status -> `Stream_status
+      | Application -> `Application
+      | Element -> `Element
+      | Segment_start -> `Segment_start
+      | Segment_done -> `Segment_done
+      | Duration_changed -> `Duration_changed
+      | Latency -> `Latency
+      | Async_start -> `Async_start
+      | Async_done -> `Async_done
+      | Request_state -> `Request_state
+      | Step_start -> `Step_start
+      | Qos -> `Qos
+      | Progress -> `Progress
+      | Toc -> `Toc
+      | Reset_time -> `Reset_time
+      | Stream_start -> `Stream_start
+      | Need_context -> `Need_context
+      | Have_context -> `Have_context
+      | Any -> assert false
 end
 
 module Bus = struct
+  type message_payload = Message.msg
+
+  type message = {
+    source: string;
+    payload: message_payload
+  }
+
   type t
+
+  type message_type = [
+    | `Unknown
+    | `End_of_stream
+    | `Error
+    | `Warning
+    | `Info
+    | `Tag
+    | `Buffering
+    | `State_changed
+    | `State_dirty
+    | `Step_done
+    | `Clock_provide
+    | `Clock_lost
+    | `New_clock
+    | `Structure_change
+    | `Stream_status
+    | `Application
+    | `Element
+    | `Segment_start
+    | `Segment_done
+    | `Duration_changed
+    | `Latency
+    | `Async_start
+    | `Async_done
+    | `Request_state
+    | `Step_start
+    | `Qos
+    | `Progress
+    | `Toc
+    | `Reset_time
+    | `Stream_start
+    | `Need_context
+    | `Have_context
+    | `Any
+  ]
 
   external of_element : Element.t -> t = "ocaml_gstreamer_bus_of_element"
 
-  external attach_context : t -> Context.t -> unit = "ocaml_gstreamer_bus_attach_context"
+  let type_of_mesage_type = function
+    | `Unknown -> Message.Unknown
+    | `End_of_stream -> Message.End_of_stream
+    | `Error -> Message.Error
+    | `Warning -> Message.Warning
+    | `Info -> Message.Info
+    | `Tag -> Message.Tag
+    | `Buffering -> Message.Buffering
+    | `State_changed -> Message.State_changed
+    | `State_dirty -> Message.State_dirty
+    | `Step_done -> Message.Step_done
+    | `Clock_provide -> Message.Clock_provide
+    | `Clock_lost -> Message.Clock_lost
+    | `New_clock -> Message.New_clock
+    | `Structure_change -> Message.Structure_change
+    | `Stream_status -> Message.Stream_status
+    | `Application -> Message.Application
+    | `Element -> Message.Element
+    | `Segment_start -> Message.Segment_start
+    | `Segment_done -> Message.Segment_done
+    | `Duration_changed -> Message.Duration_changed
+    | `Latency -> Message.Latency
+    | `Async_start -> Message.Async_start
+    | `Async_done -> Message.Async_done
+    | `Request_state -> Message.Request_state
+    | `Step_start -> Message.Step_start
+    | `Qos -> Message.Qos
+    | `Progress -> Message.Progress
+    | `Toc -> Message.Toc
+    | `Reset_time -> Message.Reset_time
+    | `Stream_start -> Message.Stream_start
+    | `Need_context -> Message.Need_context
+    | `Have_context -> Message.Have_context
+    | `Any -> Message.Any
+
+  let parse_msg msg = {
+    source = Message.source_name msg;
+    payload = Message.message_of_msg msg
+  }
+
+  let any_message = function
+    | None -> None
+    | Some msg -> Some (parse_msg msg)
 
   external pop_filtered : t -> Message.message_type array -> Message.t option = "ocaml_gstreamer_bus_pop_filtered"
-  let pop_filtered bus filter = pop_filtered bus (Array.of_list filter)
+
+  let pop_filtered bus filter =
+    any_message
+      (pop_filtered bus
+        (Array.of_list
+          (List.map type_of_mesage_type filter)))
 
   external timed_pop_filtered : t -> ?timeout:Int64.t -> Message.message_type array -> Message.t = "ocaml_gstreamer_bus_timed_pop_filtered"
-  let timed_pop_filtered bus ?timeout filter = timed_pop_filtered bus ?timeout (Array.of_list filter)
+
+  let timed_pop_filtered bus ?timeout filter =
+    parse_msg
+      (timed_pop_filtered bus ?timeout
+        (Array.of_list
+          (List.map type_of_mesage_type filter)))
 end
 
 module Bin = struct

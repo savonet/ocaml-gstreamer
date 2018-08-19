@@ -540,6 +540,66 @@ CAMLprim value ocaml_gstreamer_message_parse_tag(value _msg)
   CAMLreturn(ans);
 }
 
+/**** Main Loop ****/
+
+#define Loop_val(v) (*(GMainLoop**)Data_custom_val(v))
+
+static void finalize_loop(value v)
+{
+  GMainLoop *loop = Loop_val(v);
+  g_main_loop_unref(loop);
+}
+
+static struct custom_operations loop_ops =
+  {
+    "ocaml_gstreamer_loop",
+    finalize_loop,
+    custom_compare_default,
+    custom_hash_default,
+    custom_serialize_default,
+    custom_deserialize_default
+  };
+
+CAMLprim value ocaml_gstreamer_loop_create(value unit)
+{
+  CAMLparam0();
+  CAMLlocal1(ans);
+  GMainLoop* loop = g_main_loop_new(NULL, FALSE);
+
+  if (!loop)
+    caml_raise_out_of_memory();
+
+  ans = caml_alloc_custom(&loop_ops, sizeof(GMainLoop*), 0, 1);
+  Loop_val(ans) = loop;
+  
+  CAMLreturn(ans);
+}
+
+CAMLprim value ocaml_gstreamer_loop_run(value l)
+{
+  CAMLparam1(l);
+  GMainLoop* loop = Loop_val(l);
+
+  caml_release_runtime_system();
+  g_main_loop_run(loop);
+  caml_acquire_runtime_system();
+
+  CAMLreturn(Val_unit);
+}
+
+CAMLprim value ocaml_gstreamer_loop_quit(value l)
+{
+  CAMLparam1(l);
+  GMainLoop* loop = Loop_val(l);
+  
+  caml_release_runtime_system();
+  g_main_loop_quit(loop);
+  caml_acquire_runtime_system();
+
+  CAMLreturn(Val_unit);
+}
+
+
 /**** Bus ****/
 
 #define Bus_val(v) (*(GstBus**)Data_custom_val(v))

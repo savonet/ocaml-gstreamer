@@ -220,6 +220,16 @@ module Message = struct
       | Any -> assert false
 end
 
+module Loop = struct
+  type t
+
+  external create : unit -> t = "ocaml_gstreamer_loop_create"
+
+  external run : t -> unit = "ocaml_gstreamer_loop_run"
+
+  external quit : t -> unit = "ocaml_gstreamer_loop_quit"
+end
+
 module Bus = struct
   type message_payload = Message.msg
 

@@ -109,6 +109,15 @@ module Element_factory : sig
   val make : string -> string -> t
 end
 
+(** Main loop. *)
+module Loop : sig
+  type t
+  
+  val create : unit -> t
+  val run : t -> unit
+  val quit : t -> unit
+end
+
 (** Buses. *)
 module Bus : sig
   type t

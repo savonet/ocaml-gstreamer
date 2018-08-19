@@ -1,6 +1,7 @@
 0.3.0 ()
 =====
 * Add smarter buffer API to avoid copies.
+* Add main loop API
 * Cleanup C thread management.
 * Cleanup gst_buf management.
 

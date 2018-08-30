@@ -8,7 +8,7 @@
 #include <caml/threads.h>
 
 #ifndef Bytes_val
-#define Bytes_Val String_val
+#define Bytes_val String_val
 #endif
 
 #include <string.h>

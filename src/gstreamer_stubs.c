@@ -891,6 +891,7 @@ CAMLprim value ocaml_gstreamer_buffer_set_duration(value _buf, value _t)
 
 typedef struct {
   GstAppSrc *appsrc;
+  value element;
   value need_data_cb; // Callback function
   gulong need_data_hid; // Callback handler ID
 } appsrc;
@@ -915,6 +916,10 @@ static void finalize_appsrc(value v)
 {
   appsrc *as = Appsrc_val(v);
   disconnect_need_data(as);
+  if (as->element) {
+    caml_remove_generational_global_root(&as->element);
+    as->element = 0;
+  }
   free(as);
 }
 
@@ -942,6 +947,8 @@ CAMLprim value ocaml_gstreamer_appsrc_of_element(value _e)
   as->appsrc = GST_APP_SRC(e);
   as->need_data_cb = 0;
   as->need_data_hid = 0;
+  as->element = _e;
+  caml_register_global_root(&as->element);
 
   ans = caml_alloc_custom(&appsrc_ops, sizeof(appsrc*), 0, 1);
   Appsrc_val(ans) = as;
@@ -1108,6 +1115,7 @@ CAMLprim value ocaml_gstreamer_appsrc_set_format(value _as, value _fmt)
 
 typedef struct {
   GstAppSink *appsink;
+  value element;
   value new_sample_cb; // Callback function
   gulong new_sample_hid; // Callback handler ID
 } appsink;
@@ -1132,6 +1140,10 @@ static void finalize_appsink(value v)
 {
   appsink *as = Appsink_val(v);
   disconnect_new_sample(as);
+  if (as->element) {
+    caml_remove_generational_global_root(&as->element);
+    as->element = 0;
+  }
   free(as);
 }
 
@@ -1157,8 +1169,11 @@ CAMLprim value ocaml_gstreamer_appsink_of_element(value _e)
     caml_raise_out_of_memory();
 
   as->appsink = GST_APP_SINK(e);
+  as->element = _e;
   as->new_sample_cb = 0;
   as->new_sample_hid = 0;
+  as->element = _e;
+  caml_register_generational_global_root(&as->element);
 
   ans = caml_alloc_custom(&appsink_ops, sizeof(appsink*), 0, 1);
   Appsink_val(ans) = as;

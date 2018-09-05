@@ -4,6 +4,7 @@
 * Add main loop API
 * Cleanup C thread management.
 * Cleanup gst_buf management.
+* Record app{sink,src}->element dependency for proper GC cleanup.
 
 0.2.3 (2017-04-11)
 =====

@@ -1,4 +1,4 @@
-0.3.0 ()
+0.3.0 (2018-09-09)
 =====
 * Add smarter buffer API to avoid copies.
 * Add main loop API

@@ -12,7 +12,7 @@ flags: light-uninstall
 build: [
   ["./bootstrap"]
   ["./configure" "--prefix" prefix]
-  [make clean]
+  [make "clean"]
   [make]
 ]
 install: [make "install"]

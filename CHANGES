@@ -1,3 +1,7 @@
+0.3.1
+=====
+* Correctly raise errors in pipeline_parse_launch.
+
 0.3.0 (2018-09-09)
 =====
 * Add smarter buffer API to avoid copies.

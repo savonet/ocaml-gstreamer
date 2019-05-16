@@ -5,7 +5,7 @@ exception Failed
 exception End_of_stream
 
 let () =
-  Callback.register_exception "gstreamer_exn_error_msg" (Error "");
+  Callback.register_exception "gstreamer_exn_error" (Error "");
   Callback.register_exception "gstreamer_exn_stopped" Stopped;
   Callback.register_exception "gstreamer_exn_timeout" Timeout;
   Callback.register_exception "gstreamer_exn_failed" Failed;

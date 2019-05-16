@@ -753,7 +753,7 @@ CAMLprim value ocaml_gstreamer_pipeline_parse_launch(value s)
   GstElement *e;
 
   e = gst_parse_launch(String_val(s), &err);
-  if (err && e == NULL)
+  if (err || e == NULL)
     {
       _err = caml_copy_string(err->message);
       g_error_free(err);

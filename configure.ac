@@ -8,6 +8,7 @@ AC_BASE_CHECKS()
 PKG_PROG_PKG_CONFIG()
 PKG_CONFIG_CHECK_MODULE([gstreamer-1.0])
 PKG_CONFIG_CHECK_MODULE([gstreamer-app-1.0])
+PKG_CONFIG_CHECK_MODULE([gstreamer-video-1.0])
 
 # substitutions to perform
 AC_SUBST(VERSION)

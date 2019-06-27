@@ -243,6 +243,8 @@ module Buffer : sig
 
   val to_data : t -> data
 
+  val to_string : t -> string
+
   (** Set the presentation time of a buffer. *)
   val set_presentation_time : t -> Int64.t -> unit
 

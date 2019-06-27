@@ -1296,9 +1296,10 @@ CAMLprim value ocaml_gstreamer_appsink_pull_buffer(value _as)
   gstbuf = gst_sample_get_buffer(gstsample);
   caml_acquire_runtime_system();
 
-  /* TODO: we should unref the sample at some point...
-  //gst_sample_unref(gstsample);
   if (!gstbuf) caml_raise_out_of_memory();
+
+  gst_buffer_ref(gstbuf);
+  gst_sample_unref(gstsample);
 
   value_of_buffer(gstbuf,ans);
   CAMLreturn(ans);

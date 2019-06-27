@@ -369,8 +369,6 @@ module Buffer = struct
 
   external to_data : t -> data = "ocaml_gstreamer_buffer_to_data"
 
-  external to_string : t -> string = "ocaml_gstreamer_buffer_to_string"
-
   external set_presentation_time : t -> Int64.t -> unit = "ocaml_gstreamer_buffer_set_presentation_time"
 
   external set_decoding_time : t -> Int64.t -> unit = "ocaml_gstreamer_buffer_set_decoding_time"
@@ -421,11 +419,18 @@ module App_sink = struct
 
   external of_element : Element.t -> t = "ocaml_gstreamer_appsink_of_element"
 
-  external pull_buffer : t -> Buffer.t = "ocaml_gstreamer_appsink_pull_buffer"
+  external pull_buffer : t -> int -> Buffer.t = "ocaml_gstreamer_appsink_pull_buffer"
 
-  let pull_buffer_data sink = Buffer.to_data (pull_buffer sink)
+  let pull_buffer sink = pull_buffer sink 0
 
-  let pull_buffer_string sink = Buffer.to_string (pull_buffer sink)
+  (* TODO: use functions from Buffer instead of hardcoding this *)
+  external pull_buffer_data : t -> int -> data = "ocaml_gstreamer_appsink_pull_buffer"
+
+  let pull_buffer_data sink = pull_buffer_data sink 1
+
+  external pull_buffer_string : t -> int -> string = "ocaml_gstreamer_appsink_pull_buffer"
+
+  let pull_buffer_string sink = pull_buffer_string sink 2
 
   external emit_signals : t -> unit = "ocaml_gstreamer_appsink_emit_signals"
 

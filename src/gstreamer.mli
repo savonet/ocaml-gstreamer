@@ -241,8 +241,6 @@ module Buffer : sig
   (** Create a buffer containing given data as contents. *)
   val of_data : data -> int -> int -> t
 
-  val to_data : t -> data
-
   (** Set the presentation time of a buffer. *)
   val set_presentation_time : t -> Int64.t -> unit
 
@@ -251,18 +249,6 @@ module Buffer : sig
 
   (** Set the duration of a buffer. *)
   val set_duration : t -> Int64.t -> unit
-
-  type video_meta =
-    {
-      video_meta_id : int;
-      video_meta_width : int;
-      video_meta_height : int;
-      video_meta_planes : int;
-      video_meta_offset : int array;
-      video_meta_stride : int array;
-    }
-
-  val get_video_meta : t -> video_meta
 end
 
 (** App sources. *)
@@ -297,8 +283,6 @@ module App_sink : sig
   type t
 
   val of_element : Element.t -> t
-
-  val pull_buffer : t -> Buffer.t
 
   (** Pull a buffer in data format. *)
   val pull_buffer_data : t -> data

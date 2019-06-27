@@ -21,6 +21,7 @@
 #include <gst/gsttypefind.h>
 #include <gst/app/gstappsrc.h>
 #include <gst/app/gstappsink.h>
+#include <gst/video/gstvideometa.h>
 
 #include <pthread.h>
 
@@ -854,6 +855,56 @@ CAMLprim value ocaml_gstreamer_buffer_of_data(value _ba, value _off, value _len)
   CAMLreturn(ans);
 }
 
+CAMLprim value ocaml_gstreamer_buffer_to_string(value _buf)
+{
+  CAMLparam1(_buf);
+  CAMLlocal1(ans);
+  GstBuffer *buf = Buffer_val(_buf);
+  GstMapInfo map;
+
+  caml_release_runtime_system();
+  gboolean ret = gst_buffer_map(buf, &map, GST_MAP_READ);
+  caml_acquire_runtime_system();
+
+  if (!ret) caml_raise_out_of_memory();
+
+  intnat len = map.size;
+
+  ans = caml_alloc_string(len);
+  memcpy(String_val(ans), map.data, len);
+
+  caml_release_runtime_system();
+  gst_buffer_unmap(buf, &map);
+  caml_acquire_runtime_system();
+
+  CAMLreturn(ans);
+}
+
+CAMLprim value ocaml_gstreamer_buffer_to_data(value _buf)
+{
+  CAMLparam1(_buf);
+  CAMLlocal1(ans);
+  GstBuffer *buf = Buffer_val(_buf);
+  GstMapInfo map;
+
+  caml_release_runtime_system();
+  gboolean ret = gst_buffer_map(buf, &map, GST_MAP_READ);
+  caml_acquire_runtime_system();
+
+  if (!ret) caml_raise_out_of_memory();
+
+  intnat len = map.size;
+
+  ans = caml_ba_alloc(CAML_BA_C_LAYOUT | CAML_BA_UINT8, 1, NULL, &len);
+  memcpy(Caml_ba_data_val(ans), map.data, len);
+
+  caml_release_runtime_system();
+  gst_buffer_unmap(buf, &map);
+  caml_acquire_runtime_system();
+
+  CAMLreturn(ans);
+}
+
 CAMLprim value ocaml_gstreamer_buffer_set_presentation_time(value _buf, value _t)
 {
   CAMLparam2(_buf, _t);
@@ -885,6 +936,34 @@ CAMLprim value ocaml_gstreamer_buffer_set_duration(value _buf, value _t)
   b->duration = t;
 
   CAMLreturn(Val_unit);
+}
+
+CAMLprim value ocaml_gstreamer_buffer_get_video_meta(value _buf)
+{
+  CAMLparam1(_buf);
+  CAMLlocal3(ans, offset, stride);
+  GstBuffer *buf = Buffer_val(_buf);
+  GstVideoMeta* m = gst_buffer_get_video_meta(buf);
+  int i;
+
+  if (!m) caml_raise_not_found();
+
+  offset = caml_alloc_tuple(m->n_planes);
+  stride = caml_alloc_tuple(m->n_planes);
+  for (i = 0; i < m->n_planes; i++)
+    {
+      Store_field(offset, i, Val_int(m->offset[i]));
+      Store_field(stride, i, Val_int(m->stride[i]));
+    }
+  ans = caml_alloc_tuple(6);
+  Store_field(ans, 0, Val_int(m->id));
+  Store_field(ans, 1, Val_int(m->width));
+  Store_field(ans, 2, Val_int(m->height));
+  Store_field(ans, 3, Val_int(m->n_planes));
+  Store_field(ans, 4, offset);
+  Store_field(ans, 5, stride);
+
+  CAMLreturn(ans);
 }
 
 /***** Appsrc *****/
@@ -1193,16 +1272,13 @@ CAMLprim value ocaml_gstreamer_appsink_emit_signals(value _as)
   CAMLreturn(Val_unit);
 }
 
-CAMLprim value ocaml_gstreamer_appsink_pull_buffer(value _as, value string_mode)
+CAMLprim value ocaml_gstreamer_appsink_pull_buffer(value _as)
 {
   CAMLparam1(_as);
   CAMLlocal1(ans);
   appsink *as = Appsink_val(_as);
   GstSample *gstsample;
   GstBuffer *gstbuf;
-  GstMapInfo map;
-  intnat len;
-  gboolean ret;
 
   caml_release_runtime_system();
   gstsample = gst_app_sink_pull_sample(as->appsink);
@@ -1220,28 +1296,11 @@ CAMLprim value ocaml_gstreamer_appsink_pull_buffer(value _as, value string_mode)
   gstbuf = gst_sample_get_buffer(gstsample);
   caml_acquire_runtime_system();
 
+  /* TODO: we should unref the sample at some point...
+  //gst_sample_unref(gstsample);
   if (!gstbuf) caml_raise_out_of_memory();
 
-  caml_release_runtime_system();
-  ret = gst_buffer_map(gstbuf, &map, GST_MAP_READ);
-  caml_acquire_runtime_system();
-
-  if (!ret) caml_raise_out_of_memory();
-
-  len = map.size;
-  if (string_mode == Val_false) {
-    ans = caml_ba_alloc(CAML_BA_C_LAYOUT | CAML_BA_UINT8, 1, NULL, &len);
-    memcpy(Caml_ba_data_val(ans), map.data, len);
-  } else {
-    ans = caml_alloc_string(len);
-    memcpy(String_val(ans), map.data, len);
-  }
-
-  caml_release_runtime_system();
-  gst_buffer_unmap(gstbuf, &map);
-  gst_sample_unref(gstsample);
-  caml_acquire_runtime_system();
-
+  value_of_buffer(gstbuf,ans);
   CAMLreturn(ans);
 }
 

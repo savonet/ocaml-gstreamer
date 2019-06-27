@@ -387,7 +387,7 @@ module Buffer = struct
       video_meta_stride : int array;
     }
 
-  external get_video_meta : t -> video_meta = "caml_gstreamer_buffer_get_video_meta"
+  external get_video_meta : t -> video_meta = "ocaml_gstreamer_buffer_get_video_meta"
 end
 
 module App_src = struct

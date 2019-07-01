@@ -290,6 +290,8 @@ module App_sink : sig
 
   val of_element : Element.t -> t
 
+  val pull_buffer : t -> Buffer.t
+
   (** Pull a buffer in data format. *)
   val pull_buffer_data : t -> data
 

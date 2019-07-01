@@ -415,13 +415,11 @@ module App_sink = struct
 
   external of_element : Element.t -> t = "ocaml_gstreamer_appsink_of_element"
 
-  external pull_buffer_data : t -> bool -> data = "ocaml_gstreamer_appsink_pull_buffer"
+  external pull_buffer : t -> Buffer.t = "ocaml_gstreamer_appsink_pull_buffer"
 
-  let pull_buffer_data sink = pull_buffer_data sink false
+  let pull_buffer_data sink = Buffer.to_data (pull_buffer sink)
 
-  external pull_buffer_string : t -> bool -> string = "ocaml_gstreamer_appsink_pull_buffer"
-
-  let pull_buffer_string sink = pull_buffer_string sink true
+  let pull_buffer_string sink = Buffer.to_string (pull_buffer sink)
 
   external emit_signals : t -> unit = "ocaml_gstreamer_appsink_emit_signals"
 

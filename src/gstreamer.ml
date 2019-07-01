@@ -363,9 +363,19 @@ end
 module Buffer = struct
   type t
 
+  (* Not allowing the two below for now because they are quite unsafe. *)
+  (* external create : int -> t = "ocaml_gstreamer_buffer_create" *)
+  (* external set_data : t -> int -> data -> int -> int -> unit = "ocaml_gstreamer_buffer_set_data" *)
+
   external of_string : string -> int -> int -> t = "ocaml_gstreamer_buffer_of_string"
 
   external of_data : data -> int -> int -> t = "ocaml_gstreamer_buffer_of_data"
+
+  external of_data_list : (data * int * int) list -> t = "ocaml_gstreamer_buffer_of_data_list"
+
+  external to_data : t -> data = "ocaml_gstreamer_buffer_to_data"
+
+  external to_string : t -> string = "ocaml_gstreamer_buffer_to_string"
 
   external set_presentation_time : t -> Int64.t -> unit = "ocaml_gstreamer_buffer_set_presentation_time"
 

@@ -241,6 +241,12 @@ module Buffer : sig
   (** Create a buffer containing given data as contents. *)
   val of_data : data -> int -> int -> t
 
+  val of_data_list : (data * int * int) list -> t
+
+  val to_data : t -> data
+
+  val to_string : t -> string
+
   (** Set the presentation time of a buffer. *)
   val set_presentation_time : t -> Int64.t -> unit
 
@@ -283,6 +289,8 @@ module App_sink : sig
   type t
 
   val of_element : Element.t -> t
+
+  val pull_buffer : t -> Buffer.t
 
   (** Pull a buffer in data format. *)
   val pull_buffer_data : t -> data

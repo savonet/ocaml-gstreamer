@@ -363,9 +363,19 @@ end
 module Buffer = struct
   type t
 
+  (* Not allowing the two below for now because they are quite unsafe. *)
+  (* external create : int -> t = "ocaml_gstreamer_buffer_create" *)
+  (* external set_data : t -> int -> data -> int -> int -> unit = "ocaml_gstreamer_buffer_set_data" *)
+
   external of_string : string -> int -> int -> t = "ocaml_gstreamer_buffer_of_string"
 
   external of_data : data -> int -> int -> t = "ocaml_gstreamer_buffer_of_data"
+
+  external of_data_list : (data * int * int) list -> t = "ocaml_gstreamer_buffer_of_data_list"
+
+  external to_data : t -> data = "ocaml_gstreamer_buffer_to_data"
+
+  external to_string : t -> string = "ocaml_gstreamer_buffer_to_string"
 
   external set_presentation_time : t -> Int64.t -> unit = "ocaml_gstreamer_buffer_set_presentation_time"
 
@@ -405,13 +415,11 @@ module App_sink = struct
 
   external of_element : Element.t -> t = "ocaml_gstreamer_appsink_of_element"
 
-  external pull_buffer_data : t -> bool -> data = "ocaml_gstreamer_appsink_pull_buffer"
+  external pull_buffer : t -> Buffer.t = "ocaml_gstreamer_appsink_pull_buffer"
 
-  let pull_buffer_data sink = pull_buffer_data sink false
+  let pull_buffer_data sink = Buffer.to_data (pull_buffer sink)
 
-  external pull_buffer_string : t -> bool -> string = "ocaml_gstreamer_appsink_pull_buffer"
-
-  let pull_buffer_string sink = pull_buffer_string sink true
+  let pull_buffer_string sink = Buffer.to_string (pull_buffer sink)
 
   external emit_signals : t -> unit = "ocaml_gstreamer_appsink_emit_signals"
 

@@ -801,6 +801,50 @@ static struct custom_operations buffer_ops =
   gst_buffer_unmap(gstbuf, &map); \
   caml_acquire_runtime_system();
 
+CAMLprim value ocaml_gstreamer_buffer_create(value _len)
+{
+  CAMLparam0();
+  CAMLlocal1(ans);
+
+  int len = Int_val(_len);
+  GstBuffer *gstbuf;
+
+  caml_release_runtime_system();
+  gstbuf = gst_buffer_new_allocate(NULL, len, NULL);
+  caml_acquire_runtime_system();
+
+  if(!gstbuf) caml_raise_out_of_memory();
+
+  value_of_buffer(gstbuf,ans);
+  CAMLreturn(ans);
+}
+
+CAMLprim value ocaml_gstreamer_buffer_set_data(value _buf, value _bufoff, value _ba, value _baoff, value _len)
+{
+  CAMLparam2(_buf, _ba);
+  CAMLlocal1(ans);
+
+  GstBuffer *buf = Buffer_val(_buf);
+  int buf_off = Int_val(_bufoff);
+  unsigned char *data = Caml_ba_data_val(_ba);
+  int data_off = Int_val(_baoff);
+  int len = Int_val(_len);
+  GstMapInfo map;
+  gboolean bret;
+
+  caml_release_runtime_system();
+  bret = gst_buffer_map(buf, &map, GST_MAP_WRITE);
+  caml_acquire_runtime_system();
+
+  if(!bret) caml_raise_out_of_memory();
+
+  caml_release_runtime_system();
+  memcpy(map.data+buf_off, data+data_off, len);
+  gst_buffer_unmap(buf, &map);
+  caml_acquire_runtime_system();
+
+  CAMLreturn(ans);
+}
 
 CAMLprim value ocaml_gstreamer_buffer_of_string(value s, value _off, value _len)
 {
@@ -850,6 +894,108 @@ CAMLprim value ocaml_gstreamer_buffer_of_data(value _ba, value _off, value _len)
   buffer_fill(gstbuf, data, bufoff, buflen);
 
   value_of_buffer(gstbuf,ans);
+
+  CAMLreturn(ans);
+}
+
+CAMLprim value ocaml_gstreamer_buffer_of_data_list(value dol)
+{
+  CAMLparam1(dol);
+  CAMLlocal2(tmp,ans);
+
+  int buflen = 0;
+
+  // Compute the total length;
+  tmp = dol;
+  while (Is_block(tmp))
+    {
+      buflen += Int_val(Field(Field(tmp,0),2));
+      tmp = Field(tmp,1);
+    }
+
+  GstBuffer *gstbuf;
+
+  caml_release_runtime_system();
+  gstbuf = gst_buffer_new_allocate(NULL, buflen, NULL);
+  caml_acquire_runtime_system();
+
+  if(!gstbuf) caml_raise_out_of_memory();
+
+  tmp = dol;
+  GstMapInfo map;
+  gboolean bret;
+  int bufoff = 0;
+
+  caml_release_runtime_system();
+  bret = gst_buffer_map(gstbuf, &map, GST_MAP_WRITE);
+  caml_acquire_runtime_system();
+  if(!bret) caml_raise_out_of_memory();
+
+  while (Is_block(tmp))
+    {
+      unsigned char *data = Caml_ba_data_val(Field(Field(tmp,0),0));
+      int off = Int_val(Field(Field(tmp,0),1));
+      int len = Int_val(Field(Field(tmp,0),2));
+      assert(off+len <= Caml_ba_array_val(Field(Field(tmp,0),0))->dim[0]);
+      memcpy(map.data+bufoff, data+off, len);
+      bufoff += len;
+      tmp = Field(tmp,1);
+    }
+
+  caml_release_runtime_system();
+  gst_buffer_unmap(gstbuf, &map);
+  caml_acquire_runtime_system();
+
+  value_of_buffer(gstbuf,ans);
+  CAMLreturn(ans);
+}
+
+CAMLprim value ocaml_gstreamer_buffer_to_string(value _buf)
+{
+  CAMLparam1(_buf);
+  CAMLlocal1(ans);
+  GstBuffer *buf = Buffer_val(_buf);
+  GstMapInfo map;
+
+  caml_release_runtime_system();
+  gboolean ret = gst_buffer_map(buf, &map, GST_MAP_READ);
+  caml_acquire_runtime_system();
+
+  if (!ret) caml_raise_out_of_memory();
+
+  intnat len = map.size;
+
+  ans = caml_alloc_string(len);
+  memcpy(String_val(ans), map.data, len);
+
+  caml_release_runtime_system();
+  gst_buffer_unmap(buf, &map);
+  caml_acquire_runtime_system();
+
+  CAMLreturn(ans);
+}
+
+CAMLprim value ocaml_gstreamer_buffer_to_data(value _buf)
+{
+  CAMLparam1(_buf);
+  CAMLlocal1(ans);
+  GstBuffer *buf = Buffer_val(_buf);
+  GstMapInfo map;
+
+  caml_release_runtime_system();
+  gboolean ret = gst_buffer_map(buf, &map, GST_MAP_READ);
+  caml_acquire_runtime_system();
+
+  if (!ret) caml_raise_out_of_memory();
+
+  intnat len = map.size;
+
+  ans = caml_ba_alloc(CAML_BA_C_LAYOUT | CAML_BA_UINT8, 1, NULL, &len);
+  memcpy(Caml_ba_data_val(ans), map.data, len);
+
+  caml_release_runtime_system();
+  gst_buffer_unmap(buf, &map);
+  caml_acquire_runtime_system();
 
   CAMLreturn(ans);
 }
@@ -1193,16 +1339,13 @@ CAMLprim value ocaml_gstreamer_appsink_emit_signals(value _as)
   CAMLreturn(Val_unit);
 }
 
-CAMLprim value ocaml_gstreamer_appsink_pull_buffer(value _as, value string_mode)
+CAMLprim value ocaml_gstreamer_appsink_pull_buffer(value _as)
 {
   CAMLparam1(_as);
   CAMLlocal1(ans);
   appsink *as = Appsink_val(_as);
   GstSample *gstsample;
   GstBuffer *gstbuf;
-  GstMapInfo map;
-  intnat len;
-  gboolean ret;
 
   caml_release_runtime_system();
   gstsample = gst_app_sink_pull_sample(as->appsink);
@@ -1222,26 +1365,10 @@ CAMLprim value ocaml_gstreamer_appsink_pull_buffer(value _as, value string_mode)
 
   if (!gstbuf) caml_raise_out_of_memory();
 
-  caml_release_runtime_system();
-  ret = gst_buffer_map(gstbuf, &map, GST_MAP_READ);
-  caml_acquire_runtime_system();
-
-  if (!ret) caml_raise_out_of_memory();
-
-  len = map.size;
-  if (string_mode == Val_false) {
-    ans = caml_ba_alloc(CAML_BA_C_LAYOUT | CAML_BA_UINT8, 1, NULL, &len);
-    memcpy(Caml_ba_data_val(ans), map.data, len);
-  } else {
-    ans = caml_alloc_string(len);
-    memcpy(String_val(ans), map.data, len);
-  }
-
-  caml_release_runtime_system();
-  gst_buffer_unmap(gstbuf, &map);
+  gst_buffer_ref(gstbuf);
   gst_sample_unref(gstsample);
-  caml_acquire_runtime_system();
 
+  value_of_buffer(gstbuf,ans);
   CAMLreturn(ans);
 }
 

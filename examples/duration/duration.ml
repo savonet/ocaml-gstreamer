@@ -18,7 +18,7 @@ let printProgression bin =
 
     (* Refreshing the position every seconds (in nanoseconds) *)
     let timeout = Int64.of_int 1_000_000_000 in
-    let filter = Message.[End_of_stream; Error] in
+    let filter = [`End_of_stream; `Error] in
 
     match Bus.timed_pop_filtered (Bus.of_element bin) ~timeout filter with
     | exception Timeout -> loop()

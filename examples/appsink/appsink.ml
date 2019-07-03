@@ -34,7 +34,7 @@ let () =
   Printf.printf "from App_sink.pull_buffer_data to App_src.push_buffer_data\n%!";
   for i = 0 to 100 do
     let buf = App_sink.pull_buffer_data sink in
-    App_src.push_buffer_data src buf
+    App_src.push_buffer_data src buf 0 (Bigarray.Array1.dim buf)
   done;
   
   ignore (Element.set_state read_bin Element.State_null);

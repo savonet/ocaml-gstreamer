@@ -1,31 +1,36 @@
 opam-version: "2.0"
-version: "dev"
+name: "gstreamer"
+version: "0.3.1"
 maintainer: "Romain Beauxis <toots@rastageeks.org>"
 authors: "The Savonet Team <savonet-users@lists.sourceforge.net>"
 homepage: "https://github.com/savonet/ocaml-gstreamer"
 bug-reports: "https://github.com/savonet/ocaml-gstreamer/issues"
+synopsis:
+  "Bindings for the GStreamer library which provides functions for playning and manipulating multimedia streams"
 depends: [
   "ocaml"
   "ocamlfind" {build}
 ]
-flags: light-uninstall
 build: [
-  ["./bootstrap"]
+  ["./bootstrap"] {pinned}
   ["./configure" "--prefix" prefix]
-  [make "clean"]
+  [make "clean"] {pinned}
   [make]
 ]
 install: [make "install"]
-remove: ["ocamlfind" "remove" "gstreamer"]
 depexts: [
-  ["gstreamer1-dev" "gst-plugins-base1-dev"] {os-distribution = "alpine"}
-  ["gstreamer" "gstreamer-plugins-base"] {os-distribution = "opensuse"}
-  ["gstreamer" "gstreamer-plugins-base"] {os-distribution = "fedora"}
-  ["gstreamer" "gstreamer-plugins-base"] {os-distribution = "centos"}
+  ["gstreamer-dev" "gst-plugins-base-dev"] {os-distribution = "alpine"}
+  ["gstreamer-devel" "gstreamer-plugins-base-devel"]
+    {os-family = "suse"}
+  ["gstreamer1-devel" "gstreamer1-plugins-base-devel"]
+    {os-distribution = "fedora"}
+  ["gstreamer1-devel" "gstreamer1-plugins-base-devel"]
+    {os-distribution = "centos"}
   ["libgstreamer1.0-dev" "libgstreamer-plugins-base1.0-dev"]
     {os-distribution = "debian"}
   ["libgstreamer1.0-dev" "libgstreamer-plugins-base1.0-dev"]
     {os-distribution = "ubuntu"}
+  ["gstreamer1"] {os = "freebsd"}
   ["gstreamer" "gst-plugins-base"]
     {os = "macos" & os-distribution = "homebrew"}
 ]

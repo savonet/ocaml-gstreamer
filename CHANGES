@@ -1,4 +1,4 @@
-0.3.1 (unreleased)
+0.3.1 (2020-11-06)
 =====
 * Correctly raise errors in pipeline_parse_launch.
 * `Buffer`: add `of_data_list`, `to_data` and `to_string`.

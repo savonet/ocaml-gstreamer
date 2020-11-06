@@ -1,6 +1,0 @@
-name="gstreamer"
-version="@VERSION@"
-description="OCaml bindings for gstreamer"
-requires="bigarray"
-archive(byte)="gstreamer.cma"
-archive(native)="gstreamer.cmxa"

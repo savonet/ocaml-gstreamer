@@ -1,14 +1,16 @@
 (** An error occured (with given explanation). *)
 exception Error of string
+
 exception Timeout
 exception Stopped
 exception Failed
+
 (** Trying to read data from a stream which has ended. *)
 exception End_of_stream
 
 (** Initialize GStreamer. This function should be called before anything
     other GStreamer function. *)
-val init : ?argv:(string array) -> unit -> unit
+val init : ?argv:string array -> unit -> unit
 
 (** Uninitialize GStreamer. This function does not normally need to be called
     excepting when debugging memory. *)
@@ -21,18 +23,19 @@ val version : unit -> int * int * int * int
 val version_string : unit -> string
 
 (** Type for data in buffers. *)
-type data = (int, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1.t
+type data =
+  (int, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1.t
 
 (** Formats for durations. *)
 module Format : sig
   (** Format for durations. *)
   type t =
-  | Undefined
-  | Default
-  | Bytes
-  | Time (** Time in nanoseconds. *)
-  | Buffers
-  | Percent
+    | Undefined
+    | Default
+    | Bytes
+    | Time  (** Time in nanoseconds. *)
+    | Buffers
+    | Percent
 
   (** String representation of a duration format. *)
   val to_string : t -> string
@@ -42,15 +45,15 @@ end
 module Event : sig
   (** Seek mode. *)
   type seek_flag =
-  | Seek_flag_none
-  | Seek_flag_flush
-  | Seek_flag_accurate
-  | Seek_flag_key_unit
-  | Seek_flag_segment
-  | Seek_flag_skip
-  | Seek_flag_snap_before
-  | Seek_flag_snap_after
-  | Seek_flag_snap_nearest
+    | Seek_flag_none
+    | Seek_flag_flush
+    | Seek_flag_accurate
+    | Seek_flag_key_unit
+    | Seek_flag_segment
+    | Seek_flag_skip
+    | Seek_flag_snap_before
+    | Seek_flag_snap_after
+    | Seek_flag_snap_nearest
 end
 
 (** Elements. *)
@@ -59,27 +62,25 @@ module Element : sig
   type t
 
   val set_property_string : t -> string -> string -> unit
-
   val set_property_int : t -> string -> string -> unit
-
   val set_property_bool : t -> string -> string -> unit
 
   (** State of an element. *)
   type state =
-  | State_void_pending
-  | State_null
-  | State_ready
-  | State_paused
-  | State_playing
+    | State_void_pending
+    | State_null
+    | State_ready
+    | State_paused
+    | State_playing
 
   (** String representation of a state. *)
   val string_of_state : state -> string
 
   (** Return value for state change. *)
   type state_change =
-  | State_change_success
-  | State_change_async
-  | State_change_no_preroll
+    | State_change_success
+    | State_change_async
+    | State_change_no_preroll
 
   val set_state : t -> state -> state_change
 
@@ -112,7 +113,7 @@ end
 (** Main loop. *)
 module Loop : sig
   type t
-  
+
   val create : unit -> t
   val run : t -> unit
   val quit : t -> unit
@@ -122,8 +123,8 @@ end
 module Bus : sig
   type t
 
-  type message_type = [
-    | `Unknown
+  type message_type =
+    [ `Unknown
     | `End_of_stream
     | `Error
     | `Warning
@@ -155,18 +156,17 @@ module Bus : sig
     | `Stream_start
     | `Need_context
     | `Have_context
-    | `Any
-  ]
+    | `Any ]
 
-  type message_payload = [
-    | `Unknown
+  type message_payload =
+    [ `Unknown
     | `End_of_stream
     | `Error of string
     | `Warning of string
     | `Info of string
-    | `Tag of (string*string list) list
+    | `Tag of (string * string list) list
     | `Buffering of int
-    | `State_changed of (Element.state*Element.state*Element.state)
+    | `State_changed of Element.state * Element.state * Element.state
     | `State_dirty
     | `Step_done
     | `Clock_provide
@@ -190,18 +190,12 @@ module Bus : sig
     | `Reset_time
     | `Stream_start
     | `Need_context
-    | `Have_context
-  ]
+    | `Have_context ]
 
-  type message = {
-    source:  string;
-    payload: message_payload
-  }
+  type message = { source : string; payload : message_payload }
 
   val of_element : Element.t -> t
-
   val pop_filtered : t -> message_type list -> message option
-
   val timed_pop_filtered : t -> ?timeout:Int64.t -> message_type list -> message
 end
 
@@ -210,9 +204,7 @@ module Bin : sig
   type t = Element.t
 
   val of_element : Element.t -> t
-
   val add : t -> Element.t -> unit
-
   val add_many : t -> Element.t list -> unit
 
   (** [get_by_name "foo"] find a bin by name. Raises [Not_found] if element does
@@ -242,9 +234,7 @@ module Buffer : sig
   val of_data : data -> int -> int -> t
 
   val of_data_list : (data * int * int) list -> t
-
   val to_data : t -> data
-
   val to_string : t -> string
 
   (** Set the presentation time of a buffer. *)
@@ -262,17 +252,30 @@ module App_src : sig
   type t
 
   val to_element : t -> Element.t
-
   val of_element : Element.t -> t
 
   (** Push a buffer. *)
   val push_buffer : t -> Buffer.t -> unit
 
   (** Push a buffer in bytes format. *)
-  val push_buffer_bytes : t -> ?presentation_time:Int64.t -> ?duration:Int64.t -> bytes -> int -> int -> unit
+  val push_buffer_bytes :
+    t ->
+    ?presentation_time:Int64.t ->
+    ?duration:Int64.t ->
+    bytes ->
+    int ->
+    int ->
+    unit
 
   (** Push a buffer in data format. *)
-  val push_buffer_data : t -> ?presentation_time:Int64.t -> ?duration:Int64.t -> data -> int -> int -> unit
+  val push_buffer_data :
+    t ->
+    ?presentation_time:Int64.t ->
+    ?duration:Int64.t ->
+    data ->
+    int ->
+    int ->
+    unit
 
   (** Register a callback that will be called when data need to be fed into the
       source (the argument is the number of bytes needed by the source). *)
@@ -289,7 +292,6 @@ module App_sink : sig
   type t
 
   val of_element : Element.t -> t
-
   val pull_buffer : t -> Buffer.t
 
   (** Pull a buffer in data format. *)
@@ -325,7 +327,6 @@ module Type_find_element : sig
   type t
 
   val of_element : Element.t -> t
-
   val on_have_type : t -> (int -> Caps.t -> unit) -> unit
 end
 
@@ -334,14 +335,14 @@ module Tag_setter : sig
   type t
 
   type merge_mode =
-  | Undefined
-  | Replace_all
-  | Replace
-  | Append
-  | Prepend
-  | Keep
-  | Keep_all
-  | Count
+    | Undefined
+    | Replace_all
+    | Replace
+    | Append
+    | Prepend
+    | Keep
+    | Keep_all
+    | Count
 
   val of_element : Element.t -> t
 

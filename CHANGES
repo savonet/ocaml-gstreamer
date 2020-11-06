@@ -3,6 +3,7 @@
 * Correctly raise errors in pipeline_parse_launch.
 * `Buffer`: add `of_data_list`, `to_data` and `to_string`.
 * `App_sink`: add `pull_buffer`.
+* Switched to dune.
 
 0.3.0 (2018-09-09)
 =====

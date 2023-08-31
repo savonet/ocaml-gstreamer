@@ -1,7 +1,7 @@
 ocaml-gstreamer
 ==========
 
-ocaml-gstreamer is an OCaml interface for the GStreamer Multimedia framework.
+OCaml interface for the GStreamer Multimedia framework.
 
 Prerequisites
 -------------

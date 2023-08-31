@@ -14,13 +14,9 @@ jobs:
       uses: ocaml/setup-ocaml@v2
       with:
         ocaml-compiler: 5.0
-    - name: Install depext module
-      run: opam install -y depext
-    - name: Pin locally
-      run: opam pin -y add --no-action .
     - name: Install locally
-      run: opam depext -y -i gstreamer
+      run: opam install . --deps-only --with-test
     - name: Build locally
-      run: eval $(opam env) && dune build
+      run: opam exec -- dune build
     - name: Run tests locally
-      run: eval $(opam env) && dune runtest
+      run: opam exec -- dune runtest

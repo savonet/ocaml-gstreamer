@@ -9,9 +9,9 @@ jobs:
       matrix:
         os: [ubuntu-20.04, macos-latest]
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v3
     - name: Setup OCaml
-      uses: avsm/setup-ocaml@v1.0
+      uses: ocaml/setup-ocaml@v2
     - name: Install depext module
       run: opam install -y depext
     - name: Pin locally
